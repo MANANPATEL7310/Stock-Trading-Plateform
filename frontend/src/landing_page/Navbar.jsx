@@ -1,6 +1,6 @@
 import React from 'react';
 
-function LeftImage(){
+function Navbar(){
   return (
     <>
         
@@ -8,4 +8,4 @@ function LeftImage(){
   );
 };
 
-export default LeftImage;
+export default Navbar;

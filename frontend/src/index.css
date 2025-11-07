@@ -20,7 +20,7 @@ body {
   place-items: center; */
   min-width: 320px;
   min-height: 100vh;
-  padding: 10vw;
+  /* padding: 10vw; */
 }
 
 /* h1 {
