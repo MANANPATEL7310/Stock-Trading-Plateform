@@ -11,8 +11,10 @@ import Pricing from './Pricing';
 function HomePage(){
   return (
     <>
+    <div className="w-full min-h-screen bg-white">
         <Navbar/>  
         <Hero/>
+    </div>       
         <Awards/>
         <Stats/>
         <Pricing/>
