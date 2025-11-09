@@ -94,7 +94,7 @@ function Footer() {
 
   return (
     <>
-      <footer className="bg-gray-300 text-gray-600 text-xs font-['Inter',_sans-serif]">
+      <footer className="bg-gray-200 text-gray-600 text-xs font-['Inter',_sans-serif]">
         {/* Main container with max-width-7xl */}
         <div className="max-w-7xl mx-auto mt-24 py-5 px-4 sm:px-6 lg:px-8 ">
           {/* Top section: Logo, Links */}

@@ -1,28 +1,23 @@
-import React from 'react';
-import Hero from './Hero';
-import Awards from './Awards';
-import Stats from './Stats';
-import Education from './Education';
-import OpenAccount from '../OpenAccount';
-import Navbar from '../Navbar';
-import Footer from '../Footer';
-import Pricing from './Pricing';
+import React from "react";
+import Hero from "./Hero";
+import Awards from "./Awards";
+import Stats from "./Stats";
+import Education from "./Education";
+import OpenAccount from "../../components/OpenAccount";
+import Pricing from "./Pricing";
 
-function HomePage(){
+
+function HomePage() {
   return (
     <>
-    <div className="w-full min-h-screen bg-white">
-        <Navbar/>  
-        <Hero/>
-    </div>       
-        <Awards/>
-        <Stats/>
-        <Pricing/>
-        <Education/>
-        <OpenAccount/>
-        <Footer/>
-     </>
+      <Hero />
+      <Awards />
+      <Stats />
+      <Pricing />
+      <Education />
+      <OpenAccount />
+    </>
   );
-};
+}
 
 export default HomePage;

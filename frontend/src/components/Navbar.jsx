@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import ProductsMegaPanelDesktop from "../components/ProductsMegaPanelDesktop";
-import ProductsContent from "../components/ProductsContent";
+import {Link} from 'react-router-dom';
+import ProductsMegaPanelDesktop from "./ProductsMegaPanelDesktop";
+import ProductsContent from "./ProductsContent";
 
 function Navbar() {
   const [desktopOpen, setDesktopOpen] = useState(false); // ≥md mega panel
@@ -11,22 +12,23 @@ function Navbar() {
       {/* NAVBAR */}
       <div className="grid grid-cols-2 gap-6 w-full h-[75px] px-6 py-8 max-w-7xl fixed left-1/2  -translate-x-1/2 z-50 bg-white items-center  rounded-md">
         <div className="ml-20">
-          <img src="/media/images/logo.svg" className="w-[25%] max-h-6" alt="Logo" />
+          <Link to="/">
+          <img src="/media/images/logo.svg" className="w-[25%] max-h-6" alt="Logo" /></Link>
         </div>
 
         {/* DESKTOP inline links + 3-bars */}
         <div className="mx-auto hidden md:block">
-          <nav className="flex gap-10 items-center">
-            <a href="#" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Signup</a>
-            <a href="#" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">About</a>
-            <a href="#" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Products</a>
-            <a href="#" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Pricing</a>
-            <a href="#" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Support</a>
+          <nav className="flex gap-10 items-center ">
+            <Link to="/Signup" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Signup</Link>
+            <Link to="/About" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">About</Link>
+            <Link to="/Products" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Products</Link>
+            <Link to="/Pricing" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Pricing</Link>
+            <Link to="/Support" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Support</Link>
 
             {/* 3-bars → toggles mega panel below navbar */}
             <button
               type="button"
-              className="text-xl cursor-pointer hidden md:inline-flex"
+              className="text-xl cursor-pointer hover:!text-blue-600 transition-colors hidden md:inline-flex"
               onClick={() => setDesktopOpen((v) => !v)}
               aria-expanded={desktopOpen}
               aria-label="Toggle products panel"
@@ -78,11 +80,11 @@ function Navbar() {
 
           {/* Anchor links first (Option 1) */}
           <nav className="flex flex-col gap-4 mb-8 text-[15px]">
-            <a href="#" className="text-gray-700 hover:text-blue-600">Signup</a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">About</a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">Products</a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">Pricing</a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">Support</a>
+            <Link to="/Signup" className="text-gray-700 hover:text-blue-600">Signup</Link>
+            <Link to="/About" className="text-gray-700 hover:text-blue-600">About</Link>
+            <Link to="/Products" className="text-gray-700 hover:text-blue-600">Products</Link>
+            <Link to="/Pricing" className="text-gray-700 hover:text-blue-600">Pricing</Link>
+            <Link to="/Support" className="text-gray-700 hover:text-blue-600">Support</Link>
           </nav>
 
           {/* Same products content inside mobile panel */}
