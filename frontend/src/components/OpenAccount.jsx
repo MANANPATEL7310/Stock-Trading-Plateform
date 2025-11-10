@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom';
 function OpenAccount(){
   return (
     <>
-       <div className='max-w-7xl text-center flex flex-col items-center mx-auto mt-24 '>
+       <div className='max-w-7xl text-center flex flex-col items-center mx-auto mt-24'>
                  <h1 className="text-2xl md:text-3xl font-medium text-[#424242] mt-8">
        Open a Zerodha account
       </h1>

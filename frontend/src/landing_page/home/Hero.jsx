@@ -6,8 +6,8 @@ function Hero() {
     <>
       <div className="w-full min-h-screen bg-white">
         {/* HERO */}
-        <section className="min-h-[calc(100vh-80px)] flex items-center justify-center px-6 ">
-          <div className="max-w-7xl mt-32 text-center flex flex-col items-center ">
+        <section className="min-h-[calc(100vh-120px)] flex items-center justify-center px-6 ">
+          <div className="max-w-7xl  text-center flex flex-col items-center ">
             <img
               src="/media/images/homeHero.svg"
               alt="Hero"

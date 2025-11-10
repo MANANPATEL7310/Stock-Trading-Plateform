@@ -7,7 +7,9 @@ function Layout() {
   return (
     <>
       <Navbar />
-      <Outlet /> 
+      <div className="relative top-[120px] mb-50">
+        <Outlet />
+      </div>
       <Footer />
     </>
   );

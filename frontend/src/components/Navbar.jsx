@@ -1,29 +1,70 @@
 import React, { useState } from "react";
-import {Link} from 'react-router-dom';
+import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ProductsMegaPanelDesktop from "./ProductsMegaPanelDesktop";
 import ProductsContent from "./ProductsContent";
 
 function Navbar() {
   const [desktopOpen, setDesktopOpen] = useState(false); // ≥md mega panel
-  const [mobileOpen, setMobileOpen] = useState(false);   // <md slide panel
+  const [mobileOpen, setMobileOpen] = useState(false); // <md slide panel
+
+
+  function navLinkClass({ isActive }) {
+  return `!no-underline transition-colors ${
+    isActive ? "!text-blue-600" : "!text-[#666] hover:!text-blue-600"
+  }`;
+}
+
 
   return (
     <>
       {/* NAVBAR */}
-      <div className="grid grid-cols-2 gap-6 w-full h-[75px] px-6 py-8 max-w-7xl fixed left-1/2  -translate-x-1/2 z-50 bg-white items-center  rounded-md">
+      <div className="grid grid-cols-2 gap-6 w-full h-[75px] px-6  max-w-7xl fixed left-1/2 top-0 -translate-x-1/2 z-50 bg-white items-center  rounded-md">
         <div className="ml-20">
-          <Link to="/">
-          <img src="/media/images/logo.svg" className="w-[25%] max-h-6" alt="Logo" /></Link>
+          <NavLink
+            to="/"
+          >
+            <img
+              src="/media/images/logo.svg"
+              className="w-[25%] max-h-6 "
+              alt="Logo"
+            />
+          </NavLink>
         </div>
 
         {/* DESKTOP inline links + 3-bars */}
         <div className="mx-auto hidden md:block">
           <nav className="flex gap-10 items-center ">
-            <Link to="/Signup" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Signup</Link>
-            <Link to="/About" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">About</Link>
-            <Link to="/Products" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Products</Link>
-            <Link to="/Pricing" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Pricing</Link>
-            <Link to="/Support" className="!no-underline !text-[#666] hover:!text-blue-600 transition-colors">Support</Link>
+            <NavLink
+              to="/Signup"
+              className={navLinkClass}
+            >
+              Signup
+            </NavLink>
+            <NavLink
+              to="/About"
+              className={navLinkClass}
+            >
+              About
+            </NavLink>
+            <NavLink
+              to="/Products"
+              className={navLinkClass}
+            >
+              Products
+            </NavLink>
+            <NavLink
+              to="/Pricing"
+              className={navLinkClass}
+            >
+              Pricing
+            </NavLink>
+            <NavLink
+              to="/Support"
+              className={navLinkClass}
+            >
+              Support
+            </NavLink>
 
             {/* 3-bars → toggles mega panel below navbar */}
             <button
@@ -80,11 +121,21 @@ function Navbar() {
 
           {/* Anchor links first (Option 1) */}
           <nav className="flex flex-col gap-4 mb-8 text-[15px]">
-            <Link to="/Signup" className="text-gray-700 hover:text-blue-600">Signup</Link>
-            <Link to="/About" className="text-gray-700 hover:text-blue-600">About</Link>
-            <Link to="/Products" className="text-gray-700 hover:text-blue-600">Products</Link>
-            <Link to="/Pricing" className="text-gray-700 hover:text-blue-600">Pricing</Link>
-            <Link to="/Support" className="text-gray-700 hover:text-blue-600">Support</Link>
+            <Link to="/Signup" className="text-gray-700 hover:text-blue-600">
+              Signup
+            </Link>
+            <Link to="/About" className="text-gray-700 hover:text-blue-600">
+              About
+            </Link>
+            <Link to="/Products" className="text-gray-700 hover:text-blue-600">
+              Products
+            </Link>
+            <Link to="/Pricing" className="text-gray-700 hover:text-blue-600">
+              Pricing
+            </Link>
+            <Link to="/Support" className="text-gray-700 hover:text-blue-600">
+              Support
+            </Link>
           </nav>
 
           {/* Same products content inside mobile panel */}
