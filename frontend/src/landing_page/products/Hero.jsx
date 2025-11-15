@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import LeftImage from './LeftImage';
+import LeftImage from  '../../components/LeftImage';
 
 
 const data={image:"/media/images/kite.png",heading:"Kite",

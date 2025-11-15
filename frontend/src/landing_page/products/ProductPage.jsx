@@ -1,7 +1,7 @@
 import React from 'react';
 import Hero from './Hero';
-import LeftImage from './LeftImage';
-import RightImage from './RightImage';
+import LeftImage from  '../../components/LeftImage';
+import RightImage from  '../../components/RightImage';
 import Universe from './Universe';
 
 
