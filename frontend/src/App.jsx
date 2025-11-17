@@ -5,7 +5,7 @@ import Signup  from './landing_page/signup/Signup';
 import About  from './landing_page/about/AboutPage';
 import Products  from './landing_page/products/ProductPage'
 import Pricing  from './landing_page/pricing/PricingPage';
-import Support  from './landing_page/support/SupportPage';
+import SupportLayout  from './landing_page/support/pages/SupportLayout';
 import Investments from './landing_page/Investments/InvestmentPage';
 import NotFound from './components/NotFound';
 import Layout from './components/Layout'; 
@@ -23,7 +23,7 @@ function App() {
     <Route path="/about" element={<About/>}/>
     <Route path="/products" element={<Products/>}/>
     <Route path="/pricing" element={<Pricing/>}/>
-    <Route path="/support" element={<Support/>}/>
+    <Route path="/support/*" element={<SupportLayout/>}/>
     <Route path="/investments" element={<Investments/>}/>
     </Route>
 
