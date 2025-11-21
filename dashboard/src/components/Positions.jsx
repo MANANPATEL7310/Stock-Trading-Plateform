@@ -1,11 +1,24 @@
+import React,{useState,useEffect} from 'react';
+import axios from 'axios';
 
-import { positions } from "../data/data";
 
 
 const Positions = () => {
+
+  const [allPositions,setAllPositions]=useState([]);
+
+   useEffect(()=>{
+    axios.get("http://localhost:5000/allPositions")
+    .then((res)=>{
+      setAllPositions(res.data);
+    })
+   },[]);
+
+
+
   return (
     <div className="px-2 py-6">
-      <h3 className="text-sm font-medium text-slate-700 mb-3">Positions ({positions.length})</h3>
+      <h3 className="text-sm font-medium text-slate-700 mb-3">Positions ({allPositions.length})</h3>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-slate-700 border-collapse">
@@ -21,7 +34,7 @@ const Positions = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-           {positions.map((stock,idx)=>{
+           {allPositions.map((stock,idx)=>{
                       let currentVal= stock.price * stock.qty;
                       let isProfit=(currentVal - (stock.avg * stock.qty))>=0;
                       const profClass= isProfit ? "text-emerald-600" : "text-red-500";

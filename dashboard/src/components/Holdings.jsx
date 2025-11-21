@@ -1,13 +1,21 @@
-import { holdings   } from "../data/data";
-
-
-
-
+import React , {useEffect,useState} from 'react';
+import axios from 'axios';
 
 const Holdings = () => {
+
+ const [allHoldings,setAllHoldings]=useState([]);
+
+  useEffect(()=>{
+    axios.get("http://localhost:5000/allHoldings")
+    .then((res)=>{
+      setAllHoldings(res.data);
+    })
+  },[])
+
+
   return (
     <div className="px-2 py-6">
-      <h3 className="text-sm font-medium text-slate-700 mb-3">Holdings ({holdings.length})</h3>
+      <h3 className="text-sm font-medium text-slate-700 mb-3">Holdings ({allHoldings.length})</h3>
 
       <div className="overflow-x-auto">
         <div className="max-h-125 overflow-y-auto">
@@ -26,7 +34,7 @@ const Holdings = () => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             
-         {holdings.map((stock,idx)=>{
+         {allHoldings.map((stock,idx)=>{
             let currentVal= stock.price * stock.qty;
             let isProfit=(currentVal - (stock.avg * stock.qty))>=0;
             const profClass= isProfit ? "text-emerald-600" : "text-red-500";
