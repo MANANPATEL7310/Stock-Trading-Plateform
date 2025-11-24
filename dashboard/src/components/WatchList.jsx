@@ -8,7 +8,8 @@ import {
   MoreHoriz,
 } from "@mui/icons-material";
 
-import GeneralContext from "./GeneralContext";
+// import GeneralContext from "./GeneralContext";
+import useStockStore from "../app/stockStore";
 import { watchlist } from "../data/data";
 
 const WatchList = () => {
@@ -89,10 +90,11 @@ const WatchListItem = ({ stock }) => {
 
 const WatchListItemActions = ({uid}) => {
   
-  const generalContext=useContext(GeneralContext);
-  
+  // const generalContext=useContext(GeneralContext);
+  const setOpenBuyWindow=useStockStore((state)=>state.setOpenBuyWindow)
   const handleBuyClick=()=>{
-    generalContext.openBuyWindow(uid);
+    setOpenBuyWindow(uid);
+    // generalContext.openBuyWindow(uid);
   };
 
 

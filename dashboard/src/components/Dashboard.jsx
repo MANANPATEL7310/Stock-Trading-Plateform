@@ -7,18 +7,23 @@ import Positions from "./Positions";
 import Funds from "./Funds";
 import Apps from "./Apps";
 import WatchList from "./WatchList";
-import { GeneralContextProvider } from "./GeneralContext";
+// import { GeneralContextProvider } from "./GeneralContext";
+import useStockStore from "../app/stockStore";
+import BuyActionWindow from "./BuyActionWindow";
 
 const Dashboard = () => {
+  const buyWindow = useStockStore((state) => state.buyWindow);
+
   return (
     <>
+      {buyWindow.toggle && <BuyActionWindow uid={buyWindow.uid} />}
       
 
       <div className="flex h-screen">
         <div className="hidden lg:block w-[35%] border-r border-slate-200 bg-white p-8">
-          <GeneralContextProvider>
+          {/* <GeneralContextProvider> */}
           <WatchList />
-          </GeneralContextProvider>
+          {/* </GeneralContextProvider> */}
         </div>
 
         <main className="w-[65%] overflow-y-auto p-8">

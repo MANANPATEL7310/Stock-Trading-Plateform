@@ -1,18 +1,20 @@
 import { Button } from "@mui/material";
 import React, { useState,useContext } from "react";
-import GeneralContext from "./GeneralContext";
-
+// import GeneralContext from "./GeneralContext";
+import useStockStore from "../app/stockStore";
 
 function BuyActionWindow({uid}) {
   const [stockQuantity, setStockQuantity] = useState(1);
   const [stockPrice, setStockPrice] = useState(0);
 
-  const generalContext = useContext(GeneralContext);
+  // const generalContext = useContext(GeneralContext);
+  const setCloseWindow = useStockStore((state)=>state.setCloseBuyWindow);
 
   const handleBuyClick = () => {};
 
   const handleCancelClick = () => {
-    generalContext.closeBuyWindow();
+     setCloseWindow();
+    // generalContext.closeBuyWindow();
   };
 
   return (
