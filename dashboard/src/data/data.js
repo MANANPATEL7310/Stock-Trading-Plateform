@@ -23,7 +23,6 @@ export const watchlist = [
   { name: "SUNPHARMA", price: 1175.0, percent: "1.82%", isDown: false },
   { name: "DRREDDY", price: 6221.4, percent: "-0.23%", isDown: true },
   { name: "JSWSTEEL", price: 834.6, percent: "0.48%", isDown: false },
-  { name: "COALINDIA", price: 372.2, percent: "-0.17%", isDown: true },
 ];
 
 

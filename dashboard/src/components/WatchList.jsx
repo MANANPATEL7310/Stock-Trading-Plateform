@@ -10,14 +10,37 @@ import {
 
 // import GeneralContext from "./GeneralContext";
 import useStockStore from "../app/stockStore";
-import { watchlist } from "../data/data";
+import { useEffect } from "react";
 
 const WatchList = () => {
+  const watchlist = useStockStore((state) => state.watchList);
+  const fetchStocks = useStockStore((state) => state.fetchStocks);
+
+  useEffect(() => {
+    fetchStocks(); // Initial fetch
+
+    const intervalId = setInterval(() => {
+      fetchStocks();
+    }, 15000); // Poll every 15 seconds
+
+    return () => clearInterval(intervalId);
+  }, [fetchStocks]);
+
   return (
     <aside className="border-r border-slate-200 bg-white h-screen flex flex-col">
       <div className="flex justify-between px-4 py-8 text-[11px] text-slate-500 border-b border-slate-200">
-        <span>NIFTY 50</span> <span>0.00</span>
-        <span>SENSEX</span> <span>0.00</span>
+        <span className="flex items-center gap-2">
+          <span>TCS</span>
+          <span className={watchlist.find(s => s.symbol === "TCS")?.isDown ? "text-red-500" : "text-emerald-600"}>
+            ₹{watchlist.find(s => s.symbol === "TCS")?.price || "0.00"}
+          </span>
+        </span>
+        <span className="flex items-center gap-2">
+          <span>RELIANCE</span>
+          <span className={watchlist.find(s => s.symbol === "RELIANCE")?.isDown ? "text-red-500" : "text-emerald-600"}>
+            ₹{watchlist.find(s => s.symbol === "RELIANCE")?.price || "0.00"}
+          </span>
+        </span>
       </div>
 
       <div className="relative border-b border-slate-200">
@@ -46,6 +69,22 @@ export default WatchList;
 
 const WatchListItem = ({ stock }) => {
   const [showWatchListActions, setShowWatchListActions] = useState(false);
+  const [flashClass, setFlashClass] = useState("");
+  const prevPriceRef = React.useRef(stock.price);
+
+  useEffect(() => {
+    if (prevPriceRef.current !== stock.price) {
+      const isUp = stock.price > prevPriceRef.current;
+      setFlashClass(isUp ? "bg-emerald-100" : "bg-red-100");
+      prevPriceRef.current = stock.price;
+
+      const timer = setTimeout(() => {
+        setFlashClass("");
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [stock.price]);
 
   const handleMouseEnter = () => {
     setShowWatchListActions(true);
@@ -58,7 +97,7 @@ const WatchListItem = ({ stock }) => {
 
   return (
     <li
-      className="relative grid grid-cols-[3fr_1fr_1fr] px-4 py-2 text-sm hover:cursor-pointer hover:bg-slate-200"
+      className={`relative grid grid-cols-[3fr_1fr_1fr] px-4 py-2 text-sm hover:cursor-pointer hover:bg-slate-200 transition-colors duration-300 ${flashClass}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -76,7 +115,7 @@ const WatchListItem = ({ stock }) => {
       <span
         className={`flex items-center justify-end font-medium ${colorClass}`}
       >
-        {stock.price}
+        ₹{stock.price}
       </span>
 
       {showWatchListActions && (

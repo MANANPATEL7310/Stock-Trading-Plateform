@@ -9,6 +9,8 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/AuthRoutes.js";
+import stockRoutes from "./routes/StockRoutes.js";
+import {startStockScheduler} from "./service/StockService.js";
 import passport from "./config/passportConfig.js";
 
 import Holding from './model/HoldingsModel.js';
@@ -47,6 +49,10 @@ app.use(cors({
  app.use(passport.initialize());
 
  app.use("/auth", authRoutes);
+ app.use("/", stockRoutes); // Exposes /allStocks
+
+ // Start Stock Scheduler
+ startStockScheduler();
 
   app.get('/allHoldings', verifyToken, async(req,res)=>{
       try{
