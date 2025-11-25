@@ -1,16 +1,19 @@
 import React,{useState,useEffect} from 'react';
 import axios from 'axios';
+import useStockStore from '../app/stockStore';
 
 
 
 const Positions = () => {
 
-  const [allPositions,setAllPositions]=useState([]);
+
+   const allPositions=useStockStore((state)=>state.positions);
+   const setPositions=useStockStore((state)=>state.setPositions);
 
    useEffect(()=>{
-    axios.get("http://localhost:5000/allPositions")
+    axios.get("http://localhost:5000/allPositions", { withCredentials: true })
     .then((res)=>{
-      setAllPositions(res.data);
+      setPositions(res.data);
     })
    },[]);
 

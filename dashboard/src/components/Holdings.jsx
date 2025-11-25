@@ -1,14 +1,18 @@
 import React , {useEffect,useState} from 'react';
 import axios from 'axios';
+import useStockStore from '../app/stockStore';
+
 
 const Holdings = () => {
 
- const [allHoldings,setAllHoldings]=useState([]);
-
+//  const [allHoldings,setAllHoldings]=useState([]);
+  
+ const allHoldings=useStockStore((state)=>state.holdings);
+ const setHoldings=useStockStore((state)=>state.setHoldings);
   useEffect(()=>{
-    axios.get("http://localhost:5000/allHoldings")
+    axios.get("http://localhost:5000/allHoldings", { withCredentials: true })
     .then((res)=>{
-      setAllHoldings(res.data);
+        setHoldings(res.data);
     })
   },[])
 

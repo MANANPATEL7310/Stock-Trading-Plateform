@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-if(process.env.Node_ENV!="production"){
+if(process.env.Node_ENV!=="production"){
   dotenv.config({path:'./.env'});
 }
 
@@ -7,9 +7,13 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import cookieParser from "cookie-parser";
+import authRoutes from "./routes/AuthRoutes.js";
+import passport from "./config/passportConfig.js";
 
 import Holding from './model/HoldingsModel.js';
 import Position from './model/PositionsModel.js';
+import { userVerification, verifyToken } from './middlewares/AuthMiddleware.js';
 
 const app=express();
 const PORT=process.env.PORT || 5000;
@@ -26,36 +30,43 @@ main()
   .catch((err) => console.log(err));
 
 
- app.use(cors());
- app.use(bodyParser.json());
+ const allowedOrigins = [
+  "http://localhost:5174",
+  "http://localhost:5173",
+];
 
-  app.get('/allHoldings',async(req,res)=>{
-    try{
-      let holdings=await Holding.find({});
-      res.json(holdings);
-    }
-    catch(err){
-      res.json({message:"Server Error"});
-    }
+
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174"],
+  credentials: true,
+}));
+
+
+ app.use(bodyParser.json());
+ app.use(cookieParser());
+ app.use(passport.initialize());
+
+ app.use("/auth", authRoutes);
+
+  app.get('/allHoldings', verifyToken, async(req,res)=>{
+      try{
+        let holdings=await Holding.find({});
+        res.json(holdings);
+      }
+      catch(err){
+        res.json({message:"Server Error"});
+      }
   })
 
-  app.get('/allPositions',async (req,res)=>{
+  app.get('/allPositions', verifyToken, async (req,res)=>{
     try{
-      let positions=await Position.find({});
+      let positions=await Position.find({ });
       res.json(positions);
     }
     catch(err){
       res.json({message:"Server Error"});
     }
   })  
-
-  
-
-
-
-
-
-
 
 app.listen(PORT,()=>{
   console.log("Server started!");
