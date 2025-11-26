@@ -11,10 +11,18 @@ import {
 // import GeneralContext from "./GeneralContext";
 import useStockStore from "../app/stockStore";
 import { useEffect } from "react";
+import WatchListChart from "./WatchListChart";
+
+import AnalyticsModal from "./AnalyticsModal";
+import MarketDepthModal from "./MarketDepthModal";
 
 const WatchList = () => {
   const watchlist = useStockStore((state) => state.watchList);
   const fetchStocks = useStockStore((state) => state.fetchStocks);
+  
+  // Modal State
+  const [analyticsStock, setAnalyticsStock] = useState(null);
+  const [marketDepthStock, setMarketDepthStock] = useState(null);
 
   useEffect(() => {
     fetchStocks(); // Initial fetch
@@ -59,17 +67,37 @@ const WatchList = () => {
           {[...watchlist]
             .sort((a, b) => Math.abs(b.tick_percent_change || 0) - Math.abs(a.tick_percent_change || 0))
             .map((stock, idx) => (
-              <WatchListItem key={idx} stock={stock} />
+              <WatchListItem 
+                key={idx} 
+                stock={stock} 
+                onAnalytics={() => setAnalyticsStock(stock.symbol)}
+                onMore={() => setMarketDepthStock(stock.symbol)}
+              />
             ))}
         </ul>
       </div>
+
+      {/* Chart Section */}
+      <WatchListChart />
+
+      {/* Modals */}
+      <AnalyticsModal 
+        open={!!analyticsStock} 
+        onClose={() => setAnalyticsStock(null)} 
+        symbol={analyticsStock} 
+      />
+      <MarketDepthModal 
+        open={!!marketDepthStock} 
+        onClose={() => setMarketDepthStock(null)} 
+        symbol={marketDepthStock} 
+      />
     </aside>
   );
 };
 
 export default WatchList;
 
-const WatchListItem = ({ stock }) => {
+const WatchListItem = ({ stock, onAnalytics, onMore }) => {
   const [showWatchListActions, setShowWatchListActions] = useState(false);
   const [flashClass, setFlashClass] = useState("");
   const prevPriceRef = React.useRef(stock.price);
@@ -122,14 +150,18 @@ const WatchListItem = ({ stock }) => {
 
       {showWatchListActions && (
         <div className="absolute right-[35%] top-1/2 -translate-y-1/2">
-          <WatchListItemActions uid={stock.name}/>
+          <WatchListItemActions 
+            uid={stock.name} 
+            onAnalytics={onAnalytics}
+            onMore={onMore}
+          />
         </div>
       )}
     </li>
   );
 };
 
-const WatchListItemActions = ({uid}) => {
+const WatchListItemActions = ({uid, onAnalytics, onMore}) => {
   
   // const generalContext=useContext(GeneralContext);
   const setOpenBuyWindow=useStockStore((state)=>state.setOpenBuyWindow)
@@ -165,13 +197,19 @@ const WatchListItemActions = ({uid}) => {
           arrow
           TransitionComponent={Grow}
         >
-          <button className="w-8 h-8 flex items-center justify-center rounded-md border hover:bg-slate-100 transition">
+          <button 
+            className="w-8 h-8 flex items-center justify-center rounded-md border hover:bg-slate-100 transition"
+            onClick={onAnalytics}
+          >
             <SignalCellularAlt />
           </button>
         </Tooltip>
 
         <Tooltip title="More" placement="top" arrow TransitionComponent={Grow}>
-          <button className="w-8 h-8 flex items-center justify-center rounded-md border hover:bg-slate-100 transition">
+          <button 
+            className="w-8 h-8 flex items-center justify-center rounded-md border hover:bg-slate-100 transition"
+            onClick={onMore}
+          >
             <MoreHoriz />
           </button>
         </Tooltip>

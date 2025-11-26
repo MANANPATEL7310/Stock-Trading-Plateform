@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import useStockStore from "../app/stockStore";
 import { holdings as dummyHoldings } from "../data/data";
 import { Tooltip, Grow, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from "@mui/material";
+import HoldingsChart from "./HoldingsChart";
 
 // Sub-component for animated row
 const HoldingsRow = ({ stock, watchList, isDummy, handleOpenGTT }) => {
@@ -210,6 +211,9 @@ const Holdings = () => {
           <p className="text-medium text-slate-500">Total P&L</p>
         </div>
       </div>
+
+      {/* Holdings Chart */}
+      <HoldingsChart />
 
       {/* GTT Modal */}
       <Dialog open={openGTT} onClose={handleCloseGTT}>

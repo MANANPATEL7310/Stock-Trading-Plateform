@@ -52,7 +52,20 @@ const Positions = () => {
 
   return (
     <div className="px-2 py-6">
-      {/* ... (warnings) */}
+      {isDummy && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <i className="fa-solid fa-circle-info text-blue-500"></i>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-blue-700 font-medium">
+                This is dummy data. Place an intraday order to see real positions.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <h3 className="text-sm font-medium text-slate-700 mb-3">Positions ({displayPositions.length})</h3>
 
