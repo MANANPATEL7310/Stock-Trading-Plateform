@@ -86,7 +86,7 @@ const checkAndExecuteTriggers = async (symbol, currentPrice) => {
           // 3. Remove Holding (Close Position)
           await Holding.deleteOne({ _id: holding._id });
 
-          console.log(`[AutoTrade] Executed ${triggerType} Sell for ${symbol} @ ${currentPrice} (User: ${user.username})`);
+          // console.log(`[AutoTrade] Executed ${triggerType} Sell for ${symbol} @ ${currentPrice} (User: ${user.username})`);
         }
       }
     }
@@ -198,17 +198,17 @@ const simulateMarketMovement = async () => {
 
         // Calculate Price Change
         // Volatility Logic:
-        // 1. Base Volatility: 0.5% (Small, realistic ticks)
-        // 2. High Volatility Jump: 20% chance of 5-10% swing (Big moves, ~100-300 rupees)
+        // 1. Base Volatility: 0.2% (Small, realistic ticks ~2-5 rupees)
+        // 2. High Volatility Jump: 10% chance of 3.0% swing (Strong moves ~30-50 rupees)
         
-        const isHighVolatility = Math.random() < 0.2; // 20% chance of a "Jump"
+        const isHighVolatility = Math.random() < 0.1; // 10% chance of a "Jump"
         let volatility;
 
         if (isHighVolatility) {
-          volatility = 8.0; // 8% Standard Deviation (Big Swing)
+          volatility = 3.0; // 3.0% Standard Deviation (Strong Swing)
           // console.log(`[StockService] High Volatility Jump for ${symbol}!`);
         } else {
-          volatility = 0.5; // 0.5% Standard Deviation (Normal Tick)
+          volatility = 0.2; // 0.2% Standard Deviation (Normal Tick)
         }
 
         // Bias: marketTrend * 0.05 (stronger bias to drive the jumps)
