@@ -22,6 +22,14 @@ const UserSchema = new Schema({
     unique: true,
     sparse: true,
   },
+  funds: {
+    type: Number,
+    default: 10000,
+  },
+  tradeHistory: {
+    hasBought: { type: Boolean, default: false },
+    hasSold: { type: Boolean, default: false },
+  },
   createdAt: {
     type: Date,
     default: new Date(),

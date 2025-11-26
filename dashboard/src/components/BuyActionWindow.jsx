@@ -1,20 +1,52 @@
 import { Button } from "@mui/material";
-import React, { useState,useContext } from "react";
-// import GeneralContext from "./GeneralContext";
+import React, { useState, useEffect } from "react";
 import useStockStore from "../app/stockStore";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-function BuyActionWindow({uid}) {
+function BuyActionWindow({ uid }) {
+  const { watchList, placeOrder, setCloseBuyWindow, buyWindow } = useStockStore();
   const [stockQuantity, setStockQuantity] = useState(1);
   const [stockPrice, setStockPrice] = useState(0);
+  const [mode, setMode] = useState(buyWindow.mode || "BUY"); // Initialize from store
 
-  // const generalContext = useContext(GeneralContext);
-  const setCloseWindow = useStockStore((state)=>state.setCloseBuyWindow);
+  // Find stock details from watchList
+  const stock = watchList.find((s) => s.symbol === uid) || {};
 
-  const handleBuyClick = () => {};
+  useEffect(() => {
+    if (stock.price) {
+      setStockPrice(stock.price);
+    }
+  }, [stock.price]);
+
+  const handleBuyClick = async () => {
+    const qty = parseInt(stockQuantity);
+    const price = parseFloat(stockPrice);
+
+    if (qty <= 0 || price <= 0) {
+      toast.error("Invalid quantity or price");
+      return;
+    }
+
+    const result = await placeOrder({
+      symbol: uid,
+      qty,
+      price,
+      mode,
+    });
+
+    if (result.success) {
+      toast.success(`${mode} Order Placed Successfully!`);
+      setTimeout(() => {
+        setCloseBuyWindow();
+      }, 1000);
+    } else {
+      toast.error(result.message);
+    }
+  };
 
   const handleCancelClick = () => {
-     setCloseWindow();
-    // generalContext.closeBuyWindow();
+    setCloseBuyWindow();
   };
 
   return (
@@ -32,10 +64,15 @@ function BuyActionWindow({uid}) {
         font-sans
       "
     >
+      <ToastContainer position="top-right" autoClose={3000} />
+      
       {/* Header / Drag Handle */}
-      <div className="bg-blue-600 px-6 py-3 flex justify-between items-center ">
-        <h3 className="text-white font-semibold text-lg m-0">Buy Order</h3>
-        <span className="text-blue-200 text-xs">{uid}</span>
+      <div className={`px-6 py-3 flex justify-between items-center ${mode === "BUY" ? "bg-blue-600" : "bg-orange-600"}`}>
+        <h3 className="text-white font-semibold text-lg m-0">{mode === "BUY" ? "Buy" : "Sell"} {uid}</h3>
+        <div className="flex gap-2">
+           <button onClick={() => setMode("BUY")} className={`text-xs px-2 py-1 rounded ${mode === "BUY" ? "bg-white text-blue-600" : "text-white border border-white"}`}>Buy</button>
+           <button onClick={() => setMode("SELL")} className={`text-xs px-2 py-1 rounded ${mode === "SELL" ? "bg-white text-orange-600" : "text-white border border-white"}`}>Sell</button>
+        </div>
       </div>
 
       {/* Content */}
@@ -49,6 +86,7 @@ function BuyActionWindow({uid}) {
             <input
               type="number"
               id="qty"
+              min="1"
               value={stockQuantity}
               onChange={(e) => setStockQuantity(e.target.value)}
               className="
@@ -92,24 +130,24 @@ function BuyActionWindow({uid}) {
         {/* Margin Info */}
         <div className="flex justify-between items-center mb-6 text-sm text-gray-500">
           <span>Margin required</span>
-          <span className="font-semibold text-gray-700">₹140.65</span>
+          <span className="font-semibold text-gray-700">₹{(stockQuantity * stockPrice).toFixed(2)}</span>
         </div>
 
         {/* Buttons */}
         <div className="flex gap-3 pt-2">
           <Button
-            className="
+            className={`
               flex-1
-              !bg-blue-600 hover:!bg-blue-700 
               !text-white !font-semibold 
               !py-3 !rounded-lg
               !text-sm !normal-case
               !shadow-md hover:!shadow-lg
               !transition-all !duration-200
-            "
+              ${mode === "BUY" ? "!bg-blue-600 hover:!bg-blue-700" : "!bg-orange-600 hover:!bg-orange-700"}
+            `}
             onClick={handleBuyClick}
           >
-            Buy
+            {mode}
           </Button>
 
           <Button
@@ -133,7 +171,3 @@ function BuyActionWindow({uid}) {
 }
 
 export default BuyActionWindow;
-
-
-
-// Margin Requirement=Number of Shares×Price per Share×Margin Rate Percentage

@@ -1,138 +1,277 @@
-import axios from "axios";
 import Stock from "../schemas/StockSchema.js";
-import dotenv from "dotenv";
+import Holding from "../model/HoldingsModel.js";
+import Order from "../model/OrdersModel.js";
+import User from "../model/UserModel.js";
+import { initialPrices, symbolsList } from "../data/stocks.js";
 
-dotenv.config();
+// Market Sentiment State
+// Range: -3.0 (Crash) to +3.0 (Boom). 0 is Neutral.
+let marketTrend = 0; 
 
-const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
-const BASE_URL = "https://api.twelvedata.com/quote";
+// Helper: Box-Muller Transform for Normal Distribution
+const getNormallyDistributedRandom = (mean, stdDev) => {
+  const u = 1 - Math.random(); // Converting [0,1) to (0,1]
+  const v = Math.random();
+  const z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+  // z is standard normal (mean 0, stdDev 1)
+  return z * stdDev + mean;
+};
 
-// 24 Symbols from data.js
-const symbolsList = [
-  "INFY", "ONGC", "TCS", "KPITTECH", "QUICKHEAL", "WIPRO", "M&M", "RELIANCE",
-  "HUL", "ICICIBANK", "HDFC", "SBIN", "AXISBANK", "TATAMOTORS", "BAJAJFINSV", "ADANIENT",
-  "ITC", "LT", "ULTRACEMCO", "ASIANPAINT", "DIVISLAB", "SUNPHARMA", "DRREDDY", "JSWSTEEL"
-];
+// Update Market Trend periodically (Simulate News Cycles)
+setInterval(() => {
+  // Decay existing trend (Mean Reversion)
+  // This pulls the trend back towards 0 over time, preventing permanent crashes/booms
+  marketTrend = marketTrend * 0.98; 
+  
+  // Add random noise (New Sentiment)
+  // 5% chance of a "News Event" (larger shift)
+  if (Math.random() < 0.05) {
+    marketTrend += getNormallyDistributedRandom(0, 1.5); 
+    // console.log(`[Market Sentiment] NEWS EVENT! Trend adjusted to ${marketTrend.toFixed(2)}`);
+  } else {
+    marketTrend += getNormallyDistributedRandom(0, 0.2);
+  }
 
-// Split into groups of 8
-const symbolGroups = [];
-const chunkSize = 8;
-for (let i = 0; i < symbolsList.length; i += chunkSize) {
-  symbolGroups.push(symbolsList.slice(i, i + chunkSize));
-}
+  // Clamp trend to reasonable limits (-3 to +3)
+  if (marketTrend > 3) marketTrend = 3;
+  if (marketTrend < -3) marketTrend = -3;
 
-// ... (imports)
+  // console.log(`[Market Sentiment] Current Trend: ${marketTrend.toFixed(2)}`);
+}, 60000); // Update trend every minute
 
-// ... (symbolsList and symbolGroups definitions)
-
-// Remove global currentGroupIndex
-// let currentGroupIndex = 0;
-
-const getNextGroupIndex = async () => {
+const checkAndExecuteTriggers = async (symbol, currentPrice) => {
   try {
-    // Find the stock that hasn't been updated for the longest time
-    const oldestStock = await Stock.findOne().sort({ updatedAt: 1 });
+    // Find holdings for this symbol that have triggers set
+    const holdings = await Holding.find({
+      symbol: symbol,
+      $or: [{ target: { $ne: null } }, { stopLoss: { $ne: null } }],
+    });
 
-    if (!oldestStock) {
-      // If DB is empty, start with group 0
-      return 0;
+    for (const holding of holdings) {
+      let triggered = false;
+      let triggerType = "";
+
+      // Check Target
+      if (holding.target && currentPrice >= holding.target) {
+        triggered = true;
+        triggerType = "TARGET";
+      }
+      // Check StopLoss
+      else if (holding.stopLoss && currentPrice <= holding.stopLoss) {
+        triggered = true;
+        triggerType = "STOPLOSS";
+      }
+
+      if (triggered) {
+        // Execute SELL Order
+        const user = await User.findById(holding.user);
+        if (user) {
+          const orderValue = currentPrice * holding.qty;
+          
+          // 1. Update User Funds
+          user.funds += orderValue;
+          user.tradeHistory.hasSold = true;
+          await user.save();
+
+          // 2. Create Order Record
+          await Order.create({
+            user: user._id,
+            symbol: symbol,
+            name: holding.name,
+            qty: holding.qty,
+            price: currentPrice,
+            mode: "SELL",
+          });
+
+          // 3. Remove Holding (Close Position)
+          await Holding.deleteOne({ _id: holding._id });
+
+          console.log(`[AutoTrade] Executed ${triggerType} Sell for ${symbol} @ ${currentPrice} (User: ${user.username})`);
+        }
+      }
     }
-
-    // Find which group this stock belongs to
-    const symbolIndex = symbolsList.indexOf(oldestStock.symbol);
-    if (symbolIndex === -1) return 0; // Should not happen if DB is consistent
-
-    const groupIndex = Math.floor(symbolIndex / chunkSize);
-    return groupIndex;
   } catch (error) {
-    // console.error("[StockService] Error determining next group:", error);
-    return 0; // Default to 0 on error
+    console.error("[AutoTrade] Error checking triggers:", error);
   }
 };
 
-const fetchAndUpdateGroup = async (groupIndex) => {
-  // ... (existing fetch logic remains the same)
-  const symbols = symbolGroups[groupIndex];
-  // Append :NSE to ensure we get Indian market data (INR)
-  const requestSymbols = symbols.map(s => `${s}:NSE`);
-  const symbolString = requestSymbols.join(",");
-  
-  // console.log(`[StockService] Fetching group ${groupIndex + 1}: ${symbolString}`);
-
+// Check and Execute Limit Orders
+const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
   try {
-    const response = await axios.get(BASE_URL, {
-      params: {
-        symbol: symbolString,
-        apikey: TWELVE_DATA_API_KEY,
-      },
+    const pendingOrders = await Order.find({ 
+      symbol, 
+      status: "PENDING",
+      type: "LIMIT" 
     });
 
-    const data = response.data;
-    
-    for (const sym of symbols) {
-      // The API response key will match the requested symbol (e.g., "TCS:NSE")
-      // But we fallback to "sym" just in case
-      const quote = data[`${sym}:NSE`] || data[sym];
-      
-      if (quote && quote.symbol) {
-        // ... (mapping logic)
-        const price = parseFloat(quote.close);
-        const change = parseFloat(quote.change);
-        const percentChange = parseFloat(quote.percent_change).toFixed(2);
-        const isDown = change < 0;
+    for (const order of pendingOrders) {
+      let executed = false;
 
-        await Stock.findOneAndUpdate(
-          { symbol: sym }, // Match by our clean symbol (e.g., "TCS")
-          {
-            $set: {
-              symbol: sym, // Ensure symbol is stored as "TCS", not "TCS:NSE"
-              name: quote.name || sym,
-              price: price,
-              open: parseFloat(quote.open),
-              high: parseFloat(quote.high),
-              low: parseFloat(quote.low),
-              previous_close: parseFloat(quote.previous_close),
-              volume: parseInt(quote.volume),
-              percent_change: percentChange,
-              change: change,
-              isDown: isDown,
-              updatedAt: new Date(), // Important: Update this timestamp!
-            },
-          },
-          { upsert: true, new: true }
-        );
-      } else {
-        // console.warn(`[StockService] No data found for ${sym} in response.`);
+      if (order.mode === "BUY" && currentPrice <= order.price) {
+        // Buy Limit Hit
+        executed = true;
+        
+        // Update Holdings
+        let holding = await Holding.findOne({ user: order.user, symbol });
+        if (holding) {
+          const newQty = holding.qty + order.qty;
+          const newAvg = ((holding.avg * holding.qty) + (order.price * order.qty)) / newQty;
+          holding.qty = newQty;
+          holding.avg = newAvg;
+          await holding.save();
+        } else {
+          await Holding.create({
+            user: order.user,
+            symbol,
+            name: order.name,
+            qty: order.qty,
+            avg: order.price,
+            product: "CNC",
+          });
+        }
+        
+        // Funds were already deducted when placing the order
+
+      } else if (order.mode === "SELL" && currentPrice >= order.price) {
+        // Sell Limit Hit
+        executed = true;
+
+        // Holdings were already deducted when placing the order
+        
+        // Add Funds
+        const user = await User.findById(order.user);
+        const orderValue = order.qty * order.price;
+        user.funds += orderValue;
+        user.tradeHistory.hasSold = true;
+        await user.save();
+      }
+
+      if (executed) {
+        order.status = "EXECUTED";
+        order.price = currentPrice; // Record execution price
+        await order.save();
+        // console.log(`[StockService] Limit Order Executed for ${symbol} @ ${currentPrice}`);
       }
     }
-    // console.log(`[StockService] Group ${groupIndex + 1} updated successfully.`);
-
   } catch (error) {
-    // console.error("[StockService] Error fetching data:", error.message);
+    console.error(`Error executing limit orders for ${symbol}:`, error);
+  }
+};
+
+const simulateMarketMovement = async () => {
+  try {
+    // Market Hours Check (7 AM to 11 PM) & Weekends (Sat/Sun)
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+
+    if (day === 0 || day === 6 || hour < 7 || hour >= 23) {
+      // console.log("[StockService] Market Closed (Hours: 07:00 - 23:00, Mon-Fri)");
+      return;
+    }
+
+    // 1. Fetch all existing stocks from DB
+    const stocks = await Stock.find({});
+    
+    // 2. Create a map of existing stocks for quick lookup
+    const stockMap = new Map(stocks.map(s => [s.symbol, s]));
+
+    // 3. Iterate through ALL symbols in our list
+    for (const symbol of symbolsList) {
+      let stock = stockMap.get(symbol);
+      let newPrice;
+      let basePrice = initialPrices[symbol];
+      let previousClose = basePrice;
+
+      if (stock) {
+        // Check for New Day Reset OR Missing Previous Close
+        const lastUpdateDate = new Date(stock.updatedAt);
+        const isNewDay = lastUpdateDate.getDate() !== now.getDate() || lastUpdateDate.getMonth() !== now.getMonth();
+        
+        // If it's a new day, OR previous_close is missing/zero, reset it.
+        if (isNewDay || !stock.previous_close) {
+          previousClose = stock.price;
+          // console.log(`[StockService] New Day/Reset for ${symbol}. Resetting Previous Close to ${previousClose}`);
+        } else {
+          previousClose = stock.previous_close;
+        }
+
+        // Calculate Price Change
+        // Volatility Logic:
+        // 1. Base Volatility: 0.5% (Small, realistic ticks)
+        // 2. High Volatility Jump: 20% chance of 5-10% swing (Big moves, ~100-300 rupees)
+        
+        const isHighVolatility = Math.random() < 0.2; // 20% chance of a "Jump"
+        let volatility;
+
+        if (isHighVolatility) {
+          volatility = 8.0; // 8% Standard Deviation (Big Swing)
+          // console.log(`[StockService] High Volatility Jump for ${symbol}!`);
+        } else {
+          volatility = 0.5; // 0.5% Standard Deviation (Normal Tick)
+        }
+
+        // Bias: marketTrend * 0.05 (stronger bias to drive the jumps)
+        const changePercent = getNormallyDistributedRandom(marketTrend * 0.05, volatility);
+        
+        const changeAmount = (stock.price * changePercent) / 100;
+        newPrice = stock.price + changeAmount;
+      } else {
+        // First run
+        newPrice = basePrice;
+        previousClose = basePrice;
+      }
+
+      // Ensure price doesn't drop too low (e.g., below 10% of base)
+      if (newPrice < basePrice * 0.1) newPrice = basePrice * 0.1;
+
+      // Calculate display metrics based on PREVIOUS CLOSE (Daily)
+      const change = newPrice - previousClose; 
+      const percentChange = ((change / previousClose) * 100).toFixed(2);
+      const isDown = change < 0;
+
+      // Calculate Tick Metrics (Instantaneous)
+      // This is the change from the LAST 10s update, not the daily open
+      const tickChange = newPrice - stock.price;
+      const tickPercentChange = ((tickChange / stock.price) * 100);
+
+      // Update DB
+      await Stock.findOneAndUpdate(
+        { symbol: symbol },
+        {
+          $set: {
+            symbol: symbol,
+            name: symbol, 
+            price: parseFloat(newPrice.toFixed(2)),
+            percent_change: percentChange,
+            change: parseFloat(change.toFixed(2)),
+            tick_percent_change: tickPercentChange, // Save tick change for sorting
+            previous_close: previousClose, // Store for next iteration
+            isDown: isDown,
+            updatedAt: new Date(),
+          },
+        },
+        { upsert: true, new: true }
+      );
+
+      // CHECK TRIGGERS AFTER UPDATE
+      await checkAndExecuteTriggers(symbol, newPrice);
+
+      // CHECK LIMIT ORDERS
+      await checkAndExecuteLimitOrders(symbol, newPrice);
+    }
+    // console.log("[StockService] Market simulated successfully.");
+  } catch (error) {
+    console.error("[StockService] Error simulating market:", error);
   }
 };
 
 export const startStockScheduler = () => {
-  // console.log("[StockService] Scheduler started. Interval: 11 minutes.");
+  console.log("[StockService] Simulation Scheduler started. Interval: 10 seconds.");
   
-  runSchedulerTick();
+  // Run immediately
+  simulateMarketMovement();
 
-  setInterval(runSchedulerTick, 6 * 60 * 1000);
-};
-
-const runSchedulerTick = async () => {
-  const now = new Date();
-  const hour = now.getHours();
-
-  // Active hours: 07:00 to 17:00
-  if (hour < 7 || hour >= 17) {
-    // console.log("[StockService] Skipping fetch due to quiet hours (17:00 - 07:00).");
-    return;
-  }
-
-  // Dynamically determine the next group based on "staleness"
-  const nextGroupIndex = await getNextGroupIndex();
-  await fetchAndUpdateGroup(nextGroupIndex);
-  
-  // No need to manually rotate currentGroupIndex anymore
+  // Run every 10 seconds for a "Live" feel
+  setInterval(simulateMarketMovement, 10000);
 };

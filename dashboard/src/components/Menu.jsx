@@ -1,9 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
+import useStockStore from "../app/stockStore";
 
 const Menu = () => {
  const [open, setOpen] = useState(false);
+ const { user, fetchUser } = useStockStore();
+ const menuRef = useRef(null);
+
+ useEffect(() => {
+   if (!user) fetchUser();
+ }, [fetchUser, user]);
+
+ // Click outside handler
+ useEffect(() => {
+   function handleClickOutside(event) {
+     if (menuRef.current && !menuRef.current.contains(event.target)) {
+       setOpen(false);
+     }
+   }
+   document.addEventListener("mousedown", handleClickOutside);
+   return () => {
+     document.removeEventListener("mousedown", handleClickOutside);
+   };
+ }, [menuRef]);
+
+ const getInitials = (name) => {
+   if (!name) return "U";
+   return name.substring(0, 2).toUpperCase();
+ };
 
   function navLinkClass({ isActive }) {
     return `!no-underline transition-colors ${
@@ -43,16 +68,16 @@ const Menu = () => {
 
 
 
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
       {!open && (
         <button
           onClick={() => setOpen(true)}
           className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-slate-50"
         >
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-fuchsia-50 text-xs font-medium text-fuchsia-500">
-            ZU
+            {getInitials(user?.username)}
           </div>
-          <p className="text-xs font-medium">USERID</p>
+          <p className="text-xs font-medium">{user?.username || "USER"}</p>
         </button>
       )}
 
@@ -63,9 +88,9 @@ const Menu = () => {
             className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-slate-50"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-fuchsia-50 text-xs font-medium text-fuchsia-500">
-              ZU
+              {getInitials(user?.username)}
             </div>
-            <p className="text-xs font-medium">USERID</p>
+            <p className="text-xs font-medium">{user?.username || "USER"}</p>
           </button>
 
           <div className="absolute right-0 top-12 z-50">

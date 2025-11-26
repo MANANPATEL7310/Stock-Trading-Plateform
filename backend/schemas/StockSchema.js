@@ -24,6 +24,10 @@ const StockSchema = new Schema({
   change: {
     type: Number, // e.g., -0.23999
   },
+  tick_percent_change: {
+    type: Number,
+    default: 0,
+  },
   isDown: {
     type: Boolean,
     default: false,

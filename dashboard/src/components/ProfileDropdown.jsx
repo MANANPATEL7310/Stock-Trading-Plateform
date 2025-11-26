@@ -1,7 +1,10 @@
 import React from "react";
 import axios from "axios";
+import useStockStore from "../app/stockStore";
 
 function ProfileDropdown() {
+  const { user } = useStockStore();
+
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -20,8 +23,8 @@ function ProfileDropdown() {
       <div className="w-64 rounded-md border border-slate-200 bg-white shadow-md text-sm">
         {/* Header */}
         <div className="p-4 border-b border-slate-100">
-          <p className="font-medium text-slate-800">Zerodha User</p>
-          <p className="text-xs text-slate-500">hello@zerodha.com</p>
+          <p className="font-medium text-slate-800">{user?.username || "User"}</p>
+          <p className="text-xs text-slate-500">{user?.email || "user@example.com"}</p>
         </div>
 
         {/* Section 1 */}

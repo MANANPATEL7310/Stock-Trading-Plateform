@@ -56,9 +56,11 @@ const WatchList = () => {
 
       <div className="flex-1 overflow-y-auto max-h-[60%]">
         <ul className="text-sm divide-y divide-slate-100">
-          {watchlist.map((stock, idx) => (
-            <WatchListItem key={idx} stock={stock} />
-          ))}
+          {[...watchlist]
+            .sort((a, b) => Math.abs(b.tick_percent_change || 0) - Math.abs(a.tick_percent_change || 0))
+            .map((stock, idx) => (
+              <WatchListItem key={idx} stock={stock} />
+            ))}
         </ul>
       </div>
     </aside>
@@ -80,7 +82,7 @@ const WatchListItem = ({ stock }) => {
 
       const timer = setTimeout(() => {
         setFlashClass("");
-      }, 1000);
+      }, 2000);
 
       return () => clearTimeout(timer);
     }
@@ -97,7 +99,7 @@ const WatchListItem = ({ stock }) => {
 
   return (
     <li
-      className={`relative grid grid-cols-[3fr_1fr_1fr] px-4 py-2 text-sm hover:cursor-pointer hover:bg-slate-200 transition-colors duration-300 ${flashClass}`}
+      className={`relative grid grid-cols-[3fr_1fr_1fr] px-4 py-2 text-sm hover:cursor-pointer hover:bg-slate-200 transition-colors duration-700 ${flashClass}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -131,12 +133,14 @@ const WatchListItemActions = ({uid}) => {
   
   // const generalContext=useContext(GeneralContext);
   const setOpenBuyWindow=useStockStore((state)=>state.setOpenBuyWindow)
+  
   const handleBuyClick=()=>{
-    setOpenBuyWindow(uid);
-    // generalContext.openBuyWindow(uid);
+    setOpenBuyWindow(uid, "BUY");
   };
 
-
+  const handleSellClick=()=>{
+    setOpenBuyWindow(uid, "SELL");
+  };
 
   return (
     <>
@@ -149,7 +153,8 @@ const WatchListItemActions = ({uid}) => {
         </Tooltip>
 
         <Tooltip title="Sell" placement="top" arrow TransitionComponent={Grow}>
-          <button className="w-8 h-8 flex items-center justify-center rounded-md bg-[#FF5722] text-white font-bold hover:opacity-90 transition">
+          <button className="w-8 h-8 flex items-center justify-center rounded-md bg-[#FF5722] text-white font-bold hover:opacity-90 transition"
+          onClick={handleSellClick}>
             S
           </button>
         </Tooltip>
