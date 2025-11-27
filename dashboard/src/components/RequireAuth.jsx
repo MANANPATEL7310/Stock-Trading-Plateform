@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import axios from "axios";
 
 const RequireAuth = () => {
+   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
@@ -20,16 +21,17 @@ const RequireAuth = () => {
         }
       } catch (err) {
         setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
     };
     verifyUser();
   }, []);
 
-  if (isAuthenticated === null) {
-    return <div>Loading...</div>;
-  }
+  // 1️⃣ Don't redirect until loading is fully done
+  if (loading) return <div>Loading...</div>;
 
-  if (isAuthenticated === false) {
+  if (!isAuthenticated) {
     window.location.href = `${import.meta.env.VITE_FRONTEND_URL}/signup`;
     return null;
   }
