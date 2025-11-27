@@ -1,8 +1,8 @@
 import User from "../model/UserModel.js";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
 
 export const userVerification = (req, res) => {
   const token = req.cookies.token;

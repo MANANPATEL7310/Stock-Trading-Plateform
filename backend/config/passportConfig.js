@@ -3,9 +3,9 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 // import { Strategy as LocalStrategy } from "passport-local";
 // import bcrypt from "bcryptjs";
 import User from "../model/UserModel.js";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
 
 // passport.use(
 //   new LocalStrategy(async (username, password, done) => {
