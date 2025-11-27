@@ -20,9 +20,9 @@ export const Signup = async (req, res) => {
 
     const token = createSecretToken(user._id);
     res.cookie("token", token, {
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
       path: "/",
       withCredentials: true,
     });
@@ -66,9 +66,9 @@ export const Login = async (req, res) => {
     const token = createSecretToken(user._id);
 
     res.cookie("token", token, {
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
       path: "/",
       withCredentials: true,
     });
@@ -91,14 +91,14 @@ export const googleCallback = (req, res) => {
   const token = createSecretToken(req.user._id);
 
   res.cookie("token", token, {
-    httpOnly: false,
-    secure: false,
-    sameSite: "lax",
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
     path: "/",
     withCredentials: true,
   });
 
-  return res.redirect(`${process.env.DASHBOARD_URL}`);
+  return res.redirect("http://localhost:5174");
 };
 
 export const getUserProfile = async (req, res) => {
