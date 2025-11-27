@@ -24,7 +24,8 @@ export const Signup = async (req, res) => {
       secure: true,
       sameSite: "none",
       path: "/",
-      withCredentials: true,
+      partitioned: true,
+      maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(201).json({
@@ -70,7 +71,8 @@ export const Login = async (req, res) => {
       secure: true,
       sameSite: "none",
       path: "/",
-      withCredentials: true,
+      partitioned: true,
+      maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(201).json({
@@ -83,7 +85,13 @@ export const Login = async (req, res) => {
 };
 
 export const Logout = (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+    partitioned: true,
+  });
   return res.status(200).json({ message: "Logged out successfully" });
 };
 
@@ -95,7 +103,8 @@ export const googleCallback = (req, res) => {
     secure: true,
     sameSite: "none",
     path: "/",
-    withCredentials: true,
+    partitioned: true,
+    maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 
   return res.redirect(`${process.env.DASHBOARD_URL}`);
