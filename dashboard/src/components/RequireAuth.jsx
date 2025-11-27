@@ -32,8 +32,9 @@ const RequireAuth = () => {
   if (loading) return <div>Loading...</div>;
 
   if (isAuthenticated===false) {
-    window.location.href = `${import.meta.env.VITE_FRONTEND_URL}/signup`;
-    return null;
+      console.log("USER NOT AUTHENTICATED — showing dashboard anyway (TEMP MODE)");
+    // window.location.href = `${import.meta.env.VITE_FRONTEND_URL}/signup`;
+    // return null;
   }
 
   return <Outlet />;
