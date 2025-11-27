@@ -1,0 +1,9 @@
+{
+  "name": "trading-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "dashboard",
+    "backend"
+  ]
+}
