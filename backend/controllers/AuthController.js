@@ -98,7 +98,7 @@ export const googleCallback = (req, res) => {
     withCredentials: true,
   });
 
-  return res.redirect("http://localhost:5174");
+  return res.redirect(`${process.env.DASHBOARD_URL}`);
 };
 
 export const getUserProfile = async (req, res) => {
