@@ -1,6 +1,6 @@
 import {model} from 'mongoose';
 
-import HoldingSchema from '../schemas/holdingSchema.js';
+import HoldingSchema from '../schemas/HoldingSchema.js';
 
 const Holding=model('Holding',HoldingSchema);
 
