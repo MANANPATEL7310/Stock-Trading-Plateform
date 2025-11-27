@@ -9,7 +9,7 @@ const RequireAuth = () => {
     const verifyUser = async () => {
       try {
         const { data } = await axios.post(
-          "http://localhost:5000/auth",
+          `${import.meta.env.VITE_BACKEND_URL}/auth`,
           {},
           { withCredentials: true }
         );
@@ -30,7 +30,7 @@ const RequireAuth = () => {
   }
 
   if (isAuthenticated === false) {
-    window.location.href = "http://localhost:5173/signup";
+    window.location.href = `${import.meta.env.VITE_FRONTEND_URL}/signup`;
     return null;
   }
 

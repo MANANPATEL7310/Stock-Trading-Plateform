@@ -27,7 +27,7 @@ const stockStore = (set) => ({
 
   fetchStocks: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/allStocks", {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/allStocks`, {
         withCredentials: true,
       });
       
@@ -47,7 +47,7 @@ const stockStore = (set) => ({
 
   fetchFunds: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/funds", { withCredentials: true });
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/funds`, { withCredentials: true });
       set({ funds: response.data.funds });
     } catch (error) {
       console.error("Error fetching funds:", error);
@@ -56,7 +56,7 @@ const stockStore = (set) => ({
 
   withdrawFunds: async (amount) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/funds/withdraw", { amount }, { withCredentials: true });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/funds/withdraw`, { amount }, { withCredentials: true });
       set({ funds: response.data.funds });
       return { success: true, message: response.data.message };
     } catch (error) {
@@ -66,7 +66,7 @@ const stockStore = (set) => ({
 
   placeOrder: async (orderData) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/order/${orderData.mode.toLowerCase()}`, orderData, { withCredentials: true });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/order/${orderData.mode.toLowerCase()}`, orderData, { withCredentials: true });
       set({ funds: response.data.funds }); 
       return { success: true, message: response.data.message };
     } catch (error) {
@@ -76,7 +76,7 @@ const stockStore = (set) => ({
 
   fetchOrders: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/orders", { withCredentials: true });
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/orders`, { withCredentials: true });
       set({ orders: response.data });
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -85,7 +85,7 @@ const stockStore = (set) => ({
 
   fetchHoldings: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/holdings", { withCredentials: true });
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/holdings`, { withCredentials: true });
       set({ holdings: response.data });
     } catch (error) {
       console.error("Error fetching holdings:", error);
@@ -94,7 +94,7 @@ const stockStore = (set) => ({
 
   fetchPositions: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/positions", { withCredentials: true });
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/positions`, { withCredentials: true });
       set({ positions: response.data });
     } catch (error) {
       console.error("Error fetching positions:", error);
@@ -103,7 +103,7 @@ const stockStore = (set) => ({
 
   fetchUser: async () => {
     try {
-      const response = await axios.get("http://localhost:5000/auth/user", { withCredentials: true });
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/auth/user`, { withCredentials: true });
       set({ user: response.data });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -112,7 +112,7 @@ const stockStore = (set) => ({
 
   setTriggers: async (triggerData) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/setTriggers", triggerData, { withCredentials: true });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/setTriggers`, triggerData, { withCredentials: true });
       return { success: true, message: response.data.message };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || "Failed to set triggers" };
@@ -121,7 +121,7 @@ const stockStore = (set) => ({
 
   squareOffPosition: async (symbol) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/squareOff", { symbol }, { withCredentials: true });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/squareOff`, { symbol }, { withCredentials: true });
       return { success: true, message: response.data.message };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || "Failed to square off" };

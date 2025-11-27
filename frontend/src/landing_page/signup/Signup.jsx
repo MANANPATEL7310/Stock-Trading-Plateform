@@ -34,7 +34,7 @@ const Signup = () => {
     e.preventDefault();
     const endpoint = isLogin ? "login" : "signup";
     try {
-      const response = await fetch(`http://localhost:5000/auth/${endpoint}`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +49,7 @@ const Signup = () => {
         handleSuccess(message);
         setTimeout(() => {
           // Redirect to dashboard running on port 5174
-          window.location.href = "http://localhost:5174";
+          window.location.href = `${import.meta.env.VITE_DASHBOARD_URL}`;
         }, 1000);
       } else {
         handleError(message);
@@ -66,7 +66,7 @@ const Signup = () => {
   };
 
   const googleAuth = () => {
-    window.open("http://localhost:5000/auth/google", "_self");
+    window.open(`${import.meta.env.VITE_BACKEND_URL}/auth/google`, "_self");
   };
 
   return (

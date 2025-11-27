@@ -31,8 +31,8 @@ main()
   .catch((err) => console.log(err));
 
 const allowedOrigins = [
-  "http://localhost:5174",
-  "http://localhost:5173",
+  `${process.env.DASHBOARD_URL}`,
+  `${process.env.FRONTEND_URL}`,
 ];
 
 app.use(cors({

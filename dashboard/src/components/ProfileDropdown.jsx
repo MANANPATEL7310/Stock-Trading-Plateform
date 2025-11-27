@@ -8,11 +8,11 @@ function ProfileDropdown() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/auth/logout",
+        `${import.meta.env.VITE_BACKEND_URL}/auth/logout`,
         {},
         { withCredentials: true }
       );
-      window.location.href = "http://localhost:5173";
+      window.location.href = `${import.meta.env.VITE_FRONTEND_URL}`;
     } catch (error) {
       console.error("Logout failed", error);
     }
