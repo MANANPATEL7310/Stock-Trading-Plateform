@@ -6,8 +6,14 @@ import jwt from "jsonwebtoken";
 
 export const userVerification = (req, res) => {
   const token = req.cookies.token;
+  
+  // DEBUG: Log incoming cookies
+  console.log("UserVerification: Cookies received:", req.cookies);
 
-  if (!token) return res.json({ status: false });
+  if (!token) {
+    console.log("UserVerification: No token found");
+    return res.json({ status: false });
+  }
 
   jwt.verify(token, process.env.TOKEN_KEY, async (err, data) => {
     if (err) return res.json({ status: false });

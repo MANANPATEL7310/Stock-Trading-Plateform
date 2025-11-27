@@ -15,8 +15,10 @@ const RequireAuth = () => {
           { withCredentials: true }
         );
         if (data.status) {
+          console.log("RequireAuth: User is authenticated", data.user);
           setIsAuthenticated(true);
         } else {
+          console.log("RequireAuth: User is NOT authenticated", data);
           setIsAuthenticated(false);
         }
       } catch (err) {
