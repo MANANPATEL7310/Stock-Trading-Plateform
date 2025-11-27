@@ -24,7 +24,6 @@ export const Signup = async (req, res) => {
       secure: true,
       sameSite: "none",
       path: "/",
-      partitioned: true,
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
@@ -71,7 +70,6 @@ export const Login = async (req, res) => {
       secure: true,
       sameSite: "none",
       path: "/",
-      partitioned: true,
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
@@ -90,7 +88,6 @@ export const Logout = (req, res) => {
     secure: true,
     sameSite: "none",
     path: "/",
-    partitioned: true,
   });
   return res.status(200).json({ message: "Logged out successfully" });
 };
@@ -103,7 +100,6 @@ export const googleCallback = (req, res) => {
     secure: true,
     sameSite: "none",
     path: "/",
-    partitioned: true,
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 
