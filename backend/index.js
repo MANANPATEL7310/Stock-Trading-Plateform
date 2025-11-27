@@ -45,6 +45,14 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
+// Global Request Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log("Origin:", req.headers.origin);
+  console.log("Cookies:", req.cookies);
+  next();
+});
+
 app.use("/auth", authRoutes);
 app.use("/", stockRoutes); // Exposes /allStocks
 app.use("/api", tradeRoutes); // Exposes /api/funds, /api/order/buy, etc.
