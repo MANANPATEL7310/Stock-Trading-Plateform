@@ -31,7 +31,7 @@ const RequireAuth = () => {
   // 1️⃣ Don't redirect until loading is fully done
   if (loading) return <div>Loading...</div>;
 
-  if (!isAuthenticated) {
+  if (isAuthenticated===false) {
     window.location.href = `${import.meta.env.VITE_FRONTEND_URL}/signup`;
     return null;
   }
