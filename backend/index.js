@@ -17,6 +17,7 @@ import passport from "./config/passportConfig.js";
 import { verifyToken } from './middlewares/AuthMiddleware.js';
 
 const app=express();
+app.set("trust proxy", 1); // Trust Render's load balancer
 const PORT=process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
 

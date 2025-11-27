@@ -10,7 +10,6 @@ import WatchList from "./WatchList";
 // import { GeneralContextProvider } from "./GeneralContext";
 import useStockStore from "../app/stockStore";
 import BuyActionWindow from "./BuyActionWindow";
-import RequireAuth from "./RequireAuth";
 
 const Dashboard = () => {
   const buyWindow = useStockStore((state) => state.buyWindow);
@@ -30,14 +29,12 @@ const Dashboard = () => {
         <main className="w-[65%] overflow-y-auto p-8">
           <Menu />
           <Routes>
-            <Route element={<RequireAuth />}>
               <Route path="/" element={<Summary />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/holdings" element={<Holdings />} />
               <Route path="/positions" element={<Positions />} />
               <Route path="/funds" element={<Funds />} />
               <Route path="/apps" element={<Apps />} />
-            </Route>
           </Routes>
         </main>
       </div>
