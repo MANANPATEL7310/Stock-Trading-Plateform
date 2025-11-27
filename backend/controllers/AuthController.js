@@ -19,16 +19,12 @@ export const Signup = async (req, res) => {
     });
 
     const token = createSecretToken(user._id);
-    
-    // DEBUG: Log token creation
-    console.log("Signup: Token created", token);
-
     res.cookie("token", token, {
-      httpOnly: false, // Temporarily set to false for debugging if needed, but true is better for security
-      secure: true, // Required for SameSite="None"
-      sameSite: "None", // Required for cross-origin
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
       path: "/",
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+      withCredentials: true,
     });
 
     return res.status(201).json({
@@ -69,15 +65,12 @@ export const Login = async (req, res) => {
 
     const token = createSecretToken(user._id);
 
-    // DEBUG: Log token creation
-    console.log("Login: Token created", token);
-
     res.cookie("token", token, {
-      httpOnly: false, 
+      httpOnly: true,
       secure: true,
-      sameSite: "None",
+      sameSite: "none",
       path: "/",
-      maxAge: 3 * 24 * 60 * 60 * 1000,
+      withCredentials: true,
     });
 
     return res.status(201).json({
@@ -97,15 +90,12 @@ export const Logout = (req, res) => {
 export const googleCallback = (req, res) => {
   const token = createSecretToken(req.user._id);
 
-  // DEBUG: Log token creation
-  console.log("Google Callback: Token created", token);
-
   res.cookie("token", token, {
-    httpOnly: false,
+    httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "none",
     path: "/",
-    maxAge: 3 * 24 * 60 * 60 * 1000,
+    withCredentials: true,
   });
 
   return res.redirect(`${process.env.DASHBOARD_URL}`);
