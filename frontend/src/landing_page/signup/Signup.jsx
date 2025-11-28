@@ -50,7 +50,13 @@ const Signup = () => {
         handleSuccess(message);
         setTimeout(() => {
           // Redirect to dashboard running on port 5174
-          window.location.href = `${import.meta.env.VITE_DASHBOARD_URL}`;
+          // FALLBACK: If env var is missing, use placeholder. USER MUST REPLACE THIS.
+          const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || "https://stock-trading-plateform-dashboard-erys.onrender.com";
+          if (!import.meta.env.VITE_DASHBOARD_URL) {
+             console.error("CRITICAL: VITE_DASHBOARD_URL is missing! Using fallback:", dashboardUrl);
+             alert("VITE_DASHBOARD_URL is missing. Please check console.");
+          }
+          window.location.href = dashboardUrl;
         }, 1000);
       } else {
         handleError(message);
