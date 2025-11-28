@@ -34,7 +34,6 @@ const Signup = () => {
     e.preventDefault();
     const endpoint = isLogin ? "login" : "signup";
     try {
-      console.log("Dashboard URL:", import.meta.env.VITE_DASHBOARD_URL);
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/${endpoint}`, {
         method: "POST",
         headers: {
@@ -50,20 +49,13 @@ const Signup = () => {
         handleSuccess(message);
         setTimeout(() => {
           // Redirect to dashboard running on port 5174
-          // FALLBACK: If env var is missing, use placeholder. USER MUST REPLACE THIS.
-          const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || "https://stock-trading-plateform-dashboard-erys.onrender.com";
-          if (!import.meta.env.VITE_DASHBOARD_URL) {
-             console.error("CRITICAL: VITE_DASHBOARD_URL is missing! Using fallback:", dashboardUrl);
-             alert("VITE_DASHBOARD_URL is missing. Please check console.");
-          }
-          window.location.href = dashboardUrl;
+          window.location.href = `${import.meta.env.VITE_DASHBOARD_URL}`;
         }, 1000);
       } else {
         handleError(message);
       }
     } catch (error) {
       console.log(error);
-      handleError(error.message || "Something went wrong");
     }
     setInputValue({
       ...inputValue,

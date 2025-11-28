@@ -32,10 +32,8 @@ main()
   .catch((err) => console.log(err));
 
 const allowedOrigins = [
-  process.env.DASHBOARD_URL,
-  process.env.FRONTEND_URL,
-  process.env.DASHBOARD_URL?.replace(/\/$/, ""),
-  process.env.FRONTEND_URL?.replace(/\/$/, "")
+  `${process.env.DASHBOARD_URL}`,
+  `${process.env.FRONTEND_URL}`,
 ];
 
 app.use(cors({
