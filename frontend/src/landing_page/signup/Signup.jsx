@@ -34,6 +34,7 @@ const Signup = () => {
     e.preventDefault();
     const endpoint = isLogin ? "login" : "signup";
     try {
+      console.log("Dashboard URL:", import.meta.env.VITE_DASHBOARD_URL);
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/${endpoint}`, {
         method: "POST",
         headers: {
@@ -56,6 +57,7 @@ const Signup = () => {
       }
     } catch (error) {
       console.log(error);
+      handleError(error.message || "Something went wrong");
     }
     setInputValue({
       ...inputValue,
