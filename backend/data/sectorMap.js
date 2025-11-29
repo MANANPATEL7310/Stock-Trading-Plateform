@@ -1,0 +1,31 @@
+export const sectorMap = {
+  "INFY": "IT",
+  "TCS": "IT",
+  "WIPRO": "IT",
+  "KPITTECH": "IT",
+
+  "ONGC": "ENERGY",
+  "RELIANCE": "ENERGY",
+
+  "HUL": "FMCG",
+  "ITC": "FMCG",
+  "ASIANPAINT": "FMCG",
+
+  "SUNPHARMA": "PHARMA",
+  "DRREDDY": "PHARMA",
+  "DIVISLAB": "PHARMA",
+
+  "ICICIBANK": "BANKING",
+  "AXISBANK": "BANKING",
+  "HDFC": "BANKING",
+  "SBIN": "BANKING",
+  "BAJAJFINSV": "BANKING",
+
+  "M&M": "AUTO",
+  "TATAMOTORS": "AUTO",
+  "JSWSTEEL": "METAL",
+  "ULTRACEMCO": "CEMENT",
+  "LT": "ENGINEERING",
+  "ADANIENT": "CONGLOMERATE",
+  "QUICKHEAL": "SOFTWARE",
+};

@@ -3,10 +3,47 @@ import Holding from "../model/HoldingsModel.js";
 import Order from "../model/OrdersModel.js";
 import User from "../model/UserModel.js";
 import { initialPrices, symbolsList } from "../data/stocks.js";
+import { sectorMap } from "../data/sectorMap.js";
+import { macroNewsImpact, sectorNewsImpact, stockNewsImpact } from "./newsService.js";
+
 
 // Market Sentiment State
 // Range: -3.0 (Crash) to +3.0 (Boom). 0 is Neutral.
 let marketTrend = 0; 
+
+
+// Normal Distribution Helper
+const normal = (mean, std) => {
+  const u = 1 - Math.random();
+  const v = Math.random();
+  return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+};
+
+// Sector base volatility
+function getSectorVol(sector) {
+  switch (sector) {
+    case "IT": return 0.10;
+    case "FMCG": return 0.04;
+    case "PHARMA": return 0.06;
+    case "BANKING": return 0.07;
+    case "ENERGY": return 0.05;
+    case "AUTO": return 0.08;
+    case "METAL": return 0.12;
+    case "CEMENT": return 0.06;
+    default: return 0.06;
+  }
+}
+
+function decay(x) {
+  return x * 0.97;
+}
+
+// MARKET TREND (sentiment)
+setInterval(() => {
+  marketTrend *= 0.98;
+  marketTrend += normal(0, 0.15);
+  marketTrend = Math.max(-3, Math.min(3, marketTrend));
+}, 60000);
 
 // Helper: Box-Muller Transform for Normal Distribution
 const getNormallyDistributedRandom = (mean, stdDev) => {
@@ -17,23 +54,7 @@ const getNormallyDistributedRandom = (mean, stdDev) => {
   return z * stdDev + mean;
 };
 
-// Update Market Trend periodically (Simulate News Cycles)
-setInterval(() => {
-  // Decay existing trend (Mean Reversion)
-  marketTrend = marketTrend * 0.98; 
-  
-  // Add random noise (New Sentiment)
-  // Reduced chance of "News Event" to 1% (was 5%)
-  if (Math.random() < 0.01) {
-    marketTrend += getNormallyDistributedRandom(0, 1.5); 
-  } else {
-    marketTrend += getNormallyDistributedRandom(0, 0.2);
-  }
 
-  // Clamp trend to reasonable limits (-3 to +3)
-  if (marketTrend > 3) marketTrend = 3;
-  if (marketTrend < -3) marketTrend = -3;
-}, 60000); // Update trend every minute
 
 const checkAndExecuteTriggers = async (symbol, currentPrice) => {
   try {
@@ -151,159 +172,148 @@ const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
   }
 };
 
-const simulateMarketMovement = async () => {
+export const simulateMarketMovement = async () => {
   try {
-    // Market Hours Check (IST: 09:15 - 15:30)
-    // Get current time in IST
     const now = new Date();
-    const istDateString = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
-    const istDate = new Date(istDateString);
+    const ist = new Date(
+      now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    );
 
-    const hour = istDate.getHours();
-    const minute = istDate.getMinutes();
-    const day = istDate.getDay(); // 0 = Sunday, 6 = Saturday
+    const hour = ist.getHours();
+    const minute = ist.getMinutes();
+    const day = ist.getDay();
 
-    // Market Closed on Weekends
-    if (day === 0 || day === 6) {
-      // console.log("[StockService] Market Closed (Weekend)");
-      return;
-    }
+    // No weekends
+    if (day === 0 || day === 6) return;
 
-    // Market Open: 07:00 - 23:00 IST (User Requested)
-    const currentTimeInMinutes = hour * 60 + minute;
-    const marketOpenTime = 7 * 60; // 07:00
-    const marketCloseTime = 23 * 60; // 23:00
+    const totalMin = hour * 60 + minute;
 
-    if (currentTimeInMinutes < marketOpenTime || currentTimeInMinutes > marketCloseTime) {
-      // console.log("[StockService] Market Closed (Hours: 07:00 - 23:00 IST)");
-      return;
-    }
+    const open = 7 * 60; // 07:00
+    const close = 23 * 60; // 11 PM
 
-    // 1. Fetch all existing stocks from DB
+    const preMarket = totalMin >= 360 && totalMin < 420;
+
+    if (!preMarket && (totalMin < open || totalMin > close)) return;
+
     const stocks = await Stock.find({});
-    
-    // 2. Create a map of existing stocks for quick lookup
     const stockMap = new Map(stocks.map(s => [s.symbol, s]));
 
-    // 3. Iterate through ALL symbols in our list
+    // LOOP ALL SYMBOLS
     for (const symbol of symbolsList) {
-      let stock = stockMap.get(symbol);
-      let newPrice;
-      let basePrice = initialPrices[symbol];
-      let previousClose = basePrice;
+      const sector = sectorMap[symbol] || "GENERAL";
+      let dbStock = stockMap.get(symbol);
 
-      if (stock) {
-        // Check for New Day Reset logic
-        // If it's exactly 7:00 AM (or close to it), we should ensure previous_close is set to yesterday's close (current price)
-        
-        const lastUpdateDate = new Date(stock.updatedAt);
-        // Convert last update to IST to compare days
-        const lastUpdateISTString = lastUpdateDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
-        const lastUpdateIST = new Date(lastUpdateISTString);
-
-        const isNewDay = lastUpdateIST.getDate() !== istDate.getDate() || lastUpdateIST.getMonth() !== istDate.getMonth();
-        
-        if (isNewDay || !stock.previous_close) {
-          previousClose = stock.price;
-          // console.log(`[StockService] New Day/Reset for ${symbol}. Resetting Previous Close to ${previousClose}`);
-        } else {
-          previousClose = stock.previous_close;
-        }
-
-        // Calculate Price Change
-        // Volatility Logic:
-        // 1. Base Volatility: 0.2% (Normal market movement)
-        // 2. "Accident" Event: 0.5% chance of 3.0% swing (Unpredictable event)
-        
-        const isEvent = Math.random() < 0.005; // 0.5% chance (Rare)
-        let volatility;
-        let isNormal = true;
-
-        if (isEvent) {
-          volatility = 3.0; // 3.0% Standard Deviation (Big Swing/Accident)
-          isNormal = false;
-        } else {
-          volatility = 0.2; // 0.2% Standard Deviation (Normal)
-        }
-
-        // Bias: marketTrend * 0.02
-        const changePercent = getNormallyDistributedRandom(marketTrend * 0.02, volatility);
-        
-        let changeAmount = (stock.price * changePercent) / 100;
-
-        // Cap normal changes to max 500 rupees
-        // Cap normal changes to max 500 rupees
-        if (isNormal) {
-          // If the calculated change is too high (e.g. for expensive stocks), 
-          // we don't just clamp it to 500 (which would make it look static).
-          // Instead, we ensure it's a random value within the [-500, 500] range.
-          
-          if (changeAmount > 500) {
-             // If calculated is > 500, pick a random value between 0 and 500
-             // weighted towards the higher end to keep the "trend" but stay within limits.
-             changeAmount = Math.random() * 500; 
-          }
-          if (changeAmount < -500) {
-             changeAmount = -1 * (Math.random() * 500);
-          }
-        }
-
-        newPrice = stock.price + changeAmount;
-      } else {
-        // First run
-        newPrice = basePrice;
-        previousClose = basePrice;
+      // FIRST INSERT
+      if (!dbStock) {
+        await Stock.create({
+          symbol,
+          name: symbol,
+          price: initialPrices[symbol],
+          previous_close: initialPrices[symbol],
+          percent_change: "0.00",
+          change: 0,
+          tick_percent_change: 0,
+          isDown: false,
+          volume: 100000,
+          didResetToday: false,
+        });
+        continue;
       }
 
-      // CIRCUIT BREAKER LOGIC
-      // Price cannot move more than +/- 20% from Previous Close
-      const upperCircuit = previousClose * 1.20;
-      const lowerCircuit = previousClose * 0.80;
+      const previousClose = dbStock.previous_close;
+      let price = dbStock.price;
 
-      if (newPrice > upperCircuit) newPrice = upperCircuit;
-      if (newPrice < lowerCircuit) newPrice = lowerCircuit;
+      // DAILY RESET
+      if (hour === 7 && minute < 2 && !dbStock.didResetToday) {
+        dbStock.previous_close = price;
+        dbStock.didResetToday = true;
+        await dbStock.save();
+      }
 
-      // Ensure price doesn't drop too low (absolute floor)
-      if (newPrice < basePrice * 0.1) newPrice = basePrice * 0.1;
+      if (hour !== 7 || minute > 2) {
+        if (dbStock.didResetToday) {
+          dbStock.didResetToday = false;
+          await dbStock.save();
+        }
+      }
 
-      // Calculate display metrics based on PREVIOUS CLOSE (Daily)
-      const change = newPrice - previousClose; 
+      // PRE-MARKET SMALL MOVES
+      if (preMarket) {
+        price += price * (Math.random() * 0.02 - 0.01) / 100;
+      } else {
+        let vol = getSectorVol(sector);
+
+        // MARKET NEWS
+        if (macroNewsImpact !== 0) {
+          vol += macroNewsImpact;
+        }
+
+        // SECTOR NEWS
+        if (sectorNewsImpact[sector]) {
+          vol += sectorNewsImpact[sector];
+        }
+
+        // STOCK NEWS
+        if (stockNewsImpact[symbol]) {
+          vol += stockNewsImpact[symbol];
+        }
+
+        // SENTIMENT
+        vol += marketTrend * 0.015;
+
+        // RANDOM NOISE
+        vol += normal(0, 0.03);
+
+        price += price * (vol / 100);
+
+        // DECAY IMPACTS
+        if (macroNewsImpact !== 0) macroNewsImpact = decay(macroNewsImpact);
+        if (sectorNewsImpact[sector]) sectorNewsImpact[sector] = decay(sectorNewsImpact[sector]);
+        if (stockNewsImpact[symbol]) stockNewsImpact[symbol] = decay(stockNewsImpact[symbol]);
+      }
+
+      // CIRCUIT BREAKER (±5%)
+      const upper = previousClose * 1.05;
+      const lower = previousClose * 0.95;
+      price = Math.min(upper, Math.max(lower, price));
+
+      price = parseFloat(price.toFixed(2));
+
+      const change = price - previousClose;
       const percentChange = ((change / previousClose) * 100).toFixed(2);
-      const isDown = change < 0;
+      const tickChange = price - dbStock.price;
+      const tickPercent = (tickChange / dbStock.price) * 100;
 
-      // Calculate Tick Metrics (Instantaneous)
-      const tickChange = newPrice - (stock ? stock.price : basePrice);
-      const tickPercentChange = ((tickChange / (stock ? stock.price : basePrice)) * 100);
+      // VOLUME SIMULATION
+      const volume = Math.abs(Math.floor((Math.random() * 50000) + Math.abs(tickChange * 2000)));
 
-      // Update DB
-      await Stock.findOneAndUpdate(
-        { symbol: symbol },
+      // DB UPDATE
+      await Stock.updateOne(
+        { symbol },
         {
           $set: {
-            symbol: symbol,
-            name: symbol, 
-            price: parseFloat(newPrice.toFixed(2)),
+            price,
+            change,
             percent_change: percentChange,
-            change: parseFloat(change.toFixed(2)),
-            tick_percent_change: tickPercentChange, 
-            previous_close: previousClose, 
-            isDown: isDown,
-            updatedAt: new Date(), // This stores in UTC, which is fine as long as we convert to IST when reading
+            isDown: change < 0,
+            previous_close: previousClose,
+            tick_percent_change: tickPercent,
+            volume,
+            updatedAt: new Date(),
           },
-        },
-        { upsert: true, new: true }
+        }
       );
 
-      // CHECK TRIGGERS AFTER UPDATE
-      await checkAndExecuteTriggers(symbol, newPrice);
-
-      // CHECK LIMIT ORDERS
-      await checkAndExecuteLimitOrders(symbol, newPrice);
+      // TRIGGERS
+      await checkAndExecuteTriggers(symbol, price);
+      await checkAndExecuteLimitOrders(symbol, price);
     }
+
   } catch (error) {
-    console.error("[StockService] Error simulating market:", error);
+    console.error("[SIMULATION ERROR]", error);
   }
 };
+
 
 export const startStockScheduler = () => {
   console.log("[StockService] Simulation Scheduler started. Interval: 10 seconds.");

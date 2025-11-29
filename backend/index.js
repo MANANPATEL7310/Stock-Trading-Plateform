@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/AuthRoutes.js";
 import stockRoutes from "./routes/StockRoutes.js";
 import tradeRoutes from "./routes/TradeRoutes.js";
+import newsRoutes from "./routes/NewsRoutes.js";
 import {startStockScheduler} from "./service/StockService.js";
 import passport from "./config/passportConfig.js";
 
@@ -45,6 +46,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
+app.use("/news",newsRoutes );
 app.use("/auth", authRoutes);
 app.use("/", stockRoutes); // Exposes /allStocks
 app.use("/api", tradeRoutes); // Exposes /api/funds, /api/order/buy, etc.
