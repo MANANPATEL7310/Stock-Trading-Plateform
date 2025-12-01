@@ -4,9 +4,12 @@ import { symbolsList } from "../data/stocks.js";
 let newsFeed = [];
 
 // IMPACT STATES
-export let macroNewsImpact = 0;
-export let sectorNewsImpact = {};
-export let stockNewsImpact = {};
+export const newsState = {
+  macroNewsImpact: 0,
+  sectorNewsImpact: {},
+  stockNewsImpact: {}
+};
+
 
 const sectors = [...new Set(Object.values(sectorMap))];
 
