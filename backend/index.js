@@ -13,6 +13,7 @@ import stockRoutes from "./routes/StockRoutes.js";
 import tradeRoutes from "./routes/TradeRoutes.js";
 import newsRoutes from "./routes/NewsRoutes.js";
 import {startStockScheduler} from "./service/StockService.js";
+import { startNewsGenerator } from "./service/newsService.js";
 import passport from "./config/passportConfig.js";
 
 import { verifyToken } from './middlewares/AuthMiddleware.js';
@@ -53,6 +54,7 @@ app.use("/api", tradeRoutes); // Exposes /api/funds, /api/order/buy, etc.
 
 // Start Stock Scheduler
 startStockScheduler();
+startNewsGenerator();
 
 app.listen(PORT,()=>{
   console.log("Server started!");
