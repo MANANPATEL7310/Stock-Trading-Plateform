@@ -1,19 +1,19 @@
+// backend/service/newsService.js
 import { sectorMap } from "../data/sectorMap.js";
 import { symbolsList } from "../data/stocks.js";
 
-let newsFeed = [];
-
-// IMPACT STATES
+// Shared state used by StockService
 export const newsState = {
-  macroNewsImpact: 0,
-  sectorNewsImpact: {},
-  stockNewsImpact: {}
+  macroNewsImpact: 0,    // single number
+  sectorNewsImpact: {},  // { [sector]: impact }
+  stockNewsImpact: {},   // { [symbol]: impact }
 };
 
+let newsFeed = [];
 
 const sectors = [...new Set(Object.values(sectorMap))];
 
-const random = arr => arr[Math.floor(Math.random() * arr.length)];
+const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 const marketEvents = [
   "RBI Policy Update",
@@ -23,7 +23,7 @@ const marketEvents = [
   "Global Market Crash",
   "Strong GDP Data",
   "FIIs Buying Heavily",
-  "Rupee Strengthens"
+  "Rupee Strengthens",
 ];
 
 const posWords = ["surges", "soars", "jumps", "gains", "beats expectations"];
@@ -32,13 +32,13 @@ const negWords = ["falls", "drops", "declines", "misses expectations"];
 const sectorPos = [
   "Sector rallies on strong demand",
   "Sector sees institutional buying",
-  "Sector boosted by positive data"
+  "Sector boosted by positive data",
 ];
 
 const sectorNeg = [
   "Sector weakens on global cues",
   "Sector faces selling pressure",
-  "Sector slips after negative outlook"
+  "Sector slips after negative outlook",
 ];
 
 export const createNewsItem = () => {
@@ -52,12 +52,14 @@ export const createNewsItem = () => {
       time: new Date(),
     };
 
-    macroNewsImpact = (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 1.8);
+    // Impact between ~0.3 and ~2.1 (positive or negative)
+    newsState.macroNewsImpact =
+      (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 1.8);
 
     return item;
   }
 
-  // SECTOR NEWS (30%)
+  // SECTOR NEWS (next 30%)
   if (r < 0.40) {
     const sector = random(sectors);
     const positive = Math.random() < 0.5;
@@ -70,12 +72,14 @@ export const createNewsItem = () => {
     };
 
     const direction = positive ? 1 : -1;
-    sectorNewsImpact[sector] = direction * (0.2 + Math.random() * 1.0);
+    // Impact between ~0.2 and ~1.2
+    newsState.sectorNewsImpact[sector] =
+      direction * (0.2 + Math.random() * 1.0);
 
     return item;
   }
 
-  // STOCK NEWS (60%)
+  // STOCK NEWS (remaining 60%)
   const stock = random(symbolsList);
   const positive = Math.random() < 0.55;
 
@@ -89,7 +93,9 @@ export const createNewsItem = () => {
   };
 
   const direction = positive ? 1 : -1;
-  stockNewsImpact[stock] = direction * (0.3 + Math.random() * 1.5);
+  // Impact between ~0.3 and ~1.8
+  newsState.stockNewsImpact[stock] =
+    direction * (0.3 + Math.random() * 1.5);
 
   return item;
 };

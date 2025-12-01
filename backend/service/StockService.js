@@ -1,3 +1,4 @@
+// backend/service/StockService.js
 import Stock from "../schemas/StockSchema.js";
 import Holding from "../model/HoldingsModel.js";
 import Order from "../model/OrdersModel.js";
@@ -10,7 +11,7 @@ import { newsState } from "./newsService.js";
 // Range: -3.0 (Crash) to +3.0 (Boom). 0 is Neutral.
 let marketTrend = 0;
 
-// Normal Distribution Helper
+// Normal Distribution Helper (Box–Muller)
 const normal = (mean, std) => {
   const u = 1 - Math.random();
   const v = Math.random();
@@ -19,7 +20,7 @@ const normal = (mean, std) => {
   );
 };
 
-// Sector base volatility
+// Sector base volatility (in percentage points)
 function getSectorVol(sector) {
   switch (sector) {
     case "IT":
@@ -43,29 +44,20 @@ function getSectorVol(sector) {
   }
 }
 
+// Decay helper for news impacts
 function decay(x) {
   return x * 0.97;
 }
 
-// MARKET TREND (sentiment)
+// MARKET TREND (sentiment) drift
 setInterval(() => {
   marketTrend *= 0.98;
   marketTrend += normal(0, 0.15);
   marketTrend = Math.max(-3, Math.min(3, marketTrend));
 }, 60000);
 
-// Helper: Box-Muller Transform for Normal Distribution
-const getNormallyDistributedRandom = (mean, stdDev) => {
-  const u = 1 - Math.random(); // Converting [0,1) to (0,1]
-  const v = Math.random();
-  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-  // z is standard normal (mean 0, stdDev 1)
-  return z * stdDev + mean;
-};
-
 const checkAndExecuteTriggers = async (symbol, currentPrice) => {
   try {
-    // Find holdings for this symbol that have triggers set
     const holdings = await Holding.find({
       symbol: symbol,
       $or: [{ target: { $ne: null } }, { stopLoss: { $ne: null } }],
@@ -73,21 +65,14 @@ const checkAndExecuteTriggers = async (symbol, currentPrice) => {
 
     for (const holding of holdings) {
       let triggered = false;
-      let triggerType = "";
 
-      // Check Target
       if (holding.target && currentPrice >= holding.target) {
         triggered = true;
-        triggerType = "TARGET";
-      }
-      // Check StopLoss
-      else if (holding.stopLoss && currentPrice <= holding.stopLoss) {
+      } else if (holding.stopLoss && currentPrice <= holding.stopLoss) {
         triggered = true;
-        triggerType = "STOPLOSS";
       }
 
       if (triggered) {
-        // Execute SELL Order
         const user = await User.findById(holding.user);
         if (user) {
           const orderValue = currentPrice * holding.qty;
@@ -107,7 +92,7 @@ const checkAndExecuteTriggers = async (symbol, currentPrice) => {
             mode: "SELL",
           });
 
-          // 3. Remove Holding (Close Position)
+          // 3. Remove Holding
           await Holding.deleteOne({ _id: holding._id });
         }
       }
@@ -117,7 +102,6 @@ const checkAndExecuteTriggers = async (symbol, currentPrice) => {
   }
 };
 
-// Check and Execute Limit Orders
 const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
   try {
     const pendingOrders = await Order.find({
@@ -130,10 +114,8 @@ const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
       let executed = false;
 
       if (order.mode === "BUY" && currentPrice <= order.price) {
-        // Buy Limit Hit
         executed = true;
 
-        // Update Holdings
         let holding = await Holding.findOne({ user: order.user, symbol });
         if (holding) {
           const newQty = holding.qty + order.qty;
@@ -153,14 +135,10 @@ const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
           });
         }
 
-        // Funds were already deducted when placing the order
+        // Funds already deducted when placing BUY limit
       } else if (order.mode === "SELL" && currentPrice >= order.price) {
-        // Sell Limit Hit
         executed = true;
 
-        // Holdings were already deducted when placing the order
-
-        // Add Funds
         const user = await User.findById(order.user);
         const orderValue = order.qty * order.price;
         user.funds += orderValue;
@@ -170,7 +148,7 @@ const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
 
       if (executed) {
         order.status = "EXECUTED";
-        order.price = currentPrice; // Record execution price
+        order.price = currentPrice;
         await order.save();
       }
     }
@@ -195,10 +173,10 @@ export const simulateMarketMovement = async () => {
 
     const totalMin = hour * 60 + minute;
 
-    const open = 7 * 60; // 07:00
-    const close = 23 * 60; // 11 PM
+    const open = 7 * 60;   // 07:00
+    const close = 23 * 60; // 23:00 (11 PM)
 
-    const preMarket = totalMin >= 360 && totalMin < 420;
+    const preMarket = totalMin >= 360 && totalMin < 420; // 06:00–07:00
 
     if (!preMarket && (totalMin < open || totalMin > close)) return;
 
@@ -250,20 +228,20 @@ export const simulateMarketMovement = async () => {
       } else {
         let vol = getSectorVol(sector);
 
-// MARKET NEWS
-if (newsState.macroNewsImpact !== 0) {
-  vol += newsState.macroNewsImpact;
-}
+        // MARKET NEWS
+        if (newsState.macroNewsImpact !== 0) {
+          vol += newsState.macroNewsImpact;
+        }
 
-// SECTOR NEWS
-if (newsState.sectorNewsImpact[sector]) {
-  vol += newsState.sectorNewsImpact[sector];
-}
+        // SECTOR NEWS
+        if (newsState.sectorNewsImpact[sector]) {
+          vol += newsState.sectorNewsImpact[sector];
+        }
 
-// STOCK NEWS
-if (newsState.stockNewsImpact[symbol]) {
-  vol += newsState.stockNewsImpact[symbol];
-}
+        // STOCK NEWS
+        if (newsState.stockNewsImpact[symbol]) {
+          vol += newsState.stockNewsImpact[symbol];
+        }
 
         // SENTIMENT
         vol += marketTrend * 0.015;
@@ -271,21 +249,26 @@ if (newsState.stockNewsImpact[symbol]) {
         // RANDOM NOISE
         vol += normal(0, 0.03);
 
+        // Apply percentage change
         price += price * (vol / 100);
 
-        // DECAY IMPACTS
-if (newsState.macroNewsImpact !== 0)
-  newsState.macroNewsImpact = decay(newsState.macroNewsImpact);
+        // DECAY IMPACTS AFTER APPLYING
+        if (newsState.macroNewsImpact !== 0) {
+          newsState.macroNewsImpact = decay(newsState.macroNewsImpact);
+        }
 
-if (newsState.sectorNewsImpact[sector])
-  newsState.sectorNewsImpact[sector] = decay(newsState.sectorNewsImpact[sector]);
+        if (newsState.sectorNewsImpact[sector]) {
+          newsState.sectorNewsImpact[sector] =
+            decay(newsState.sectorNewsImpact[sector]);
+        }
 
-if (newsState.stockNewsImpact[symbol])
-  newsState.stockNewsImpact[symbol] = decay(newsState.stockNewsImpact[symbol]);
-
+        if (newsState.stockNewsImpact[symbol]) {
+          newsState.stockNewsImpact[symbol] =
+            decay(newsState.stockNewsImpact[symbol]);
+        }
       }
 
-      // CIRCUIT BREAKER (±5%)
+      // CIRCUIT BREAKER (±5% from previousClose)
       const upper = previousClose * 1.05;
       const lower = previousClose * 0.95;
       price = Math.min(upper, Math.max(lower, price));
