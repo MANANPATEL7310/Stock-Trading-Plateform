@@ -250,22 +250,20 @@ export const simulateMarketMovement = async () => {
       } else {
         let vol = getSectorVol(sector);
 
-        // MARKET NEWS
-        if (newsState.macroNewsImpact !== 0) {
-          newsState.macroNewsImpact = decay(newsState.macroNewsImpact);
-        }
+// MARKET NEWS
+if (newsState.macroNewsImpact !== 0) {
+  vol += newsState.macroNewsImpact;
+}
 
-        // SECTOR NEWS
-        if (newsState.sectorNewsImpact[sector]) {
-          newsState.sectorNewsImpact[sector] = decay(
-            newsState.sectorNewsImpact[sector]
-          );
-        }
+// SECTOR NEWS
+if (newsState.sectorNewsImpact[sector]) {
+  vol += newsState.sectorNewsImpact[sector];
+}
 
-        // STOCK NEWS
-        if (stockNewsImpact[symbol]) {
-          vol += stockNewsImpact[symbol];
-        }
+// STOCK NEWS
+if (newsState.stockNewsImpact[symbol]) {
+  vol += newsState.stockNewsImpact[symbol];
+}
 
         // SENTIMENT
         vol += marketTrend * 0.015;
@@ -276,11 +274,15 @@ export const simulateMarketMovement = async () => {
         price += price * (vol / 100);
 
         // DECAY IMPACTS
-        if (macroNewsImpact !== 0) macroNewsImpact = decay(macroNewsImpact);
-        if (sectorNewsImpact[sector])
-          sectorNewsImpact[sector] = decay(sectorNewsImpact[sector]);
-        if (stockNewsImpact[symbol])
-          stockNewsImpact[symbol] = decay(stockNewsImpact[symbol]);
+if (newsState.macroNewsImpact !== 0)
+  newsState.macroNewsImpact = decay(newsState.macroNewsImpact);
+
+if (newsState.sectorNewsImpact[sector])
+  newsState.sectorNewsImpact[sector] = decay(newsState.sectorNewsImpact[sector]);
+
+if (newsState.stockNewsImpact[symbol])
+  newsState.stockNewsImpact[symbol] = decay(newsState.stockNewsImpact[symbol]);
+
       }
 
       // CIRCUIT BREAKER (±5%)
