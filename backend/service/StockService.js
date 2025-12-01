@@ -4,33 +4,42 @@ import Order from "../model/OrdersModel.js";
 import User from "../model/UserModel.js";
 import { initialPrices, symbolsList } from "../data/stocks.js";
 import { sectorMap } from "../data/sectorMap.js";
-import { macroNewsImpact, sectorNewsImpact, stockNewsImpact } from "./newsService.js";
-
+import { newsState } from "./newsService.js";
 
 // Market Sentiment State
 // Range: -3.0 (Crash) to +3.0 (Boom). 0 is Neutral.
-let marketTrend = 0; 
-
+let marketTrend = 0;
 
 // Normal Distribution Helper
 const normal = (mean, std) => {
   const u = 1 - Math.random();
   const v = Math.random();
-  return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  return (
+    mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
+  );
 };
 
 // Sector base volatility
 function getSectorVol(sector) {
   switch (sector) {
-    case "IT": return 0.10;
-    case "FMCG": return 0.04;
-    case "PHARMA": return 0.06;
-    case "BANKING": return 0.07;
-    case "ENERGY": return 0.05;
-    case "AUTO": return 0.08;
-    case "METAL": return 0.12;
-    case "CEMENT": return 0.06;
-    default: return 0.06;
+    case "IT":
+      return 0.1;
+    case "FMCG":
+      return 0.04;
+    case "PHARMA":
+      return 0.06;
+    case "BANKING":
+      return 0.07;
+    case "ENERGY":
+      return 0.05;
+    case "AUTO":
+      return 0.08;
+    case "METAL":
+      return 0.12;
+    case "CEMENT":
+      return 0.06;
+    default:
+      return 0.06;
   }
 }
 
@@ -49,12 +58,10 @@ setInterval(() => {
 const getNormallyDistributedRandom = (mean, stdDev) => {
   const u = 1 - Math.random(); // Converting [0,1) to (0,1]
   const v = Math.random();
-  const z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
   // z is standard normal (mean 0, stdDev 1)
   return z * stdDev + mean;
 };
-
-
 
 const checkAndExecuteTriggers = async (symbol, currentPrice) => {
   try {
@@ -84,7 +91,7 @@ const checkAndExecuteTriggers = async (symbol, currentPrice) => {
         const user = await User.findById(holding.user);
         if (user) {
           const orderValue = currentPrice * holding.qty;
-          
+
           // 1. Update User Funds
           user.funds += orderValue;
           user.tradeHistory.hasSold = true;
@@ -113,10 +120,10 @@ const checkAndExecuteTriggers = async (symbol, currentPrice) => {
 // Check and Execute Limit Orders
 const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
   try {
-    const pendingOrders = await Order.find({ 
-      symbol, 
+    const pendingOrders = await Order.find({
+      symbol,
       status: "PENDING",
-      type: "LIMIT" 
+      type: "LIMIT",
     });
 
     for (const order of pendingOrders) {
@@ -125,12 +132,13 @@ const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
       if (order.mode === "BUY" && currentPrice <= order.price) {
         // Buy Limit Hit
         executed = true;
-        
+
         // Update Holdings
         let holding = await Holding.findOne({ user: order.user, symbol });
         if (holding) {
           const newQty = holding.qty + order.qty;
-          const newAvg = ((holding.avg * holding.qty) + (order.price * order.qty)) / newQty;
+          const newAvg =
+            (holding.avg * holding.qty + order.price * order.qty) / newQty;
           holding.qty = newQty;
           holding.avg = newAvg;
           await holding.save();
@@ -144,15 +152,14 @@ const checkAndExecuteLimitOrders = async (symbol, currentPrice) => {
             product: "CNC",
           });
         }
-        
-        // Funds were already deducted when placing the order
 
+        // Funds were already deducted when placing the order
       } else if (order.mode === "SELL" && currentPrice >= order.price) {
         // Sell Limit Hit
         executed = true;
 
         // Holdings were already deducted when placing the order
-        
+
         // Add Funds
         const user = await User.findById(order.user);
         const orderValue = order.qty * order.price;
@@ -196,7 +203,7 @@ export const simulateMarketMovement = async () => {
     if (!preMarket && (totalMin < open || totalMin > close)) return;
 
     const stocks = await Stock.find({});
-    const stockMap = new Map(stocks.map(s => [s.symbol, s]));
+    const stockMap = new Map(stocks.map((s) => [s.symbol, s]));
 
     // LOOP ALL SYMBOLS
     for (const symbol of symbolsList) {
@@ -239,18 +246,20 @@ export const simulateMarketMovement = async () => {
 
       // PRE-MARKET SMALL MOVES
       if (preMarket) {
-        price += price * (Math.random() * 0.02 - 0.01) / 100;
+        price += (price * (Math.random() * 0.02 - 0.01)) / 100;
       } else {
         let vol = getSectorVol(sector);
 
         // MARKET NEWS
-        if (macroNewsImpact !== 0) {
-          vol += macroNewsImpact;
+        if (newsState.macroNewsImpact !== 0) {
+          newsState.macroNewsImpact = decay(newsState.macroNewsImpact);
         }
 
         // SECTOR NEWS
-        if (sectorNewsImpact[sector]) {
-          vol += sectorNewsImpact[sector];
+        if (newsState.sectorNewsImpact[sector]) {
+          newsState.sectorNewsImpact[sector] = decay(
+            newsState.sectorNewsImpact[sector]
+          );
         }
 
         // STOCK NEWS
@@ -268,8 +277,10 @@ export const simulateMarketMovement = async () => {
 
         // DECAY IMPACTS
         if (macroNewsImpact !== 0) macroNewsImpact = decay(macroNewsImpact);
-        if (sectorNewsImpact[sector]) sectorNewsImpact[sector] = decay(sectorNewsImpact[sector]);
-        if (stockNewsImpact[symbol]) stockNewsImpact[symbol] = decay(stockNewsImpact[symbol]);
+        if (sectorNewsImpact[sector])
+          sectorNewsImpact[sector] = decay(sectorNewsImpact[sector]);
+        if (stockNewsImpact[symbol])
+          stockNewsImpact[symbol] = decay(stockNewsImpact[symbol]);
       }
 
       // CIRCUIT BREAKER (±5%)
@@ -285,7 +296,9 @@ export const simulateMarketMovement = async () => {
       const tickPercent = (tickChange / dbStock.price) * 100;
 
       // VOLUME SIMULATION
-      const volume = Math.abs(Math.floor((Math.random() * 50000) + Math.abs(tickChange * 2000)));
+      const volume = Math.abs(
+        Math.floor(Math.random() * 50000 + Math.abs(tickChange * 2000))
+      );
 
       // DB UPDATE
       await Stock.updateOne(
@@ -308,16 +321,16 @@ export const simulateMarketMovement = async () => {
       await checkAndExecuteTriggers(symbol, price);
       await checkAndExecuteLimitOrders(symbol, price);
     }
-
   } catch (error) {
     console.error("[SIMULATION ERROR]", error);
   }
 };
 
-
 export const startStockScheduler = () => {
-  console.log("[StockService] Simulation Scheduler started. Interval: 10 seconds.");
-  
+  console.log(
+    "[StockService] Simulation Scheduler started. Interval: 10 seconds."
+  );
+
   // Run immediately
   simulateMarketMovement();
 
