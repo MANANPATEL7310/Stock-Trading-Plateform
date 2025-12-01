@@ -7,7 +7,7 @@ import Positions from "./Positions";
 import Funds from "./Funds";
 import Apps from "./Apps";
 import WatchList from "./WatchList";
-import NewsPopup from "./components/NewsPopup";
+import NewsPopup from "./NewsPopup";
 
 // import { GeneralContextProvider } from "./GeneralContext";
 import useStockStore from "../app/stockStore";
