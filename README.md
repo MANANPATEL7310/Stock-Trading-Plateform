@@ -168,17 +168,7 @@ Tracks:
 
 ---
 
-# 🧠 **Additional Features (Discussed & Added)**
 
-### ✔ Sector mapping  
-### ✔ Daily market snapshots  
-### ✔ Price history tracking  
-### ✔ Error handling (Axios + Express middleware)  
-### ✔ Loading states and skeleton UI  
-### ✔ Billions-scale numbers auto formatted  
-### ✔ Responsive UI for mobile trading  
-
----
 
 # 📁 **Folder Structure (Backend)**
 
@@ -208,6 +198,7 @@ backend/
 ## 📥 **1. Clone Repository**
 
 git clone [https://github.com/MANANPATEL7310/Stock-Trading-Plateform]
+
 cd stock-trading-platform
 
 
