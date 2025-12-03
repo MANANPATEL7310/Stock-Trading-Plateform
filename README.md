@@ -35,8 +35,11 @@ This is a **production-style full-stack trading system** developed using:
 The project is divided into **three separate apps**:
 
 stock-trading-platform/
+
 │── backend/ # Node.js + Express backend
+
 │── dashboard/ # React Vite (User trading dashboard)
+
 │── frontend/ # React Vite (Landing website)
 
 
@@ -202,7 +205,7 @@ git clone <https://github.com/MANANPATEL7310/Stock-Trading-Plateform>
 cd stock-trading-platform
 
 
-📦 2. Install Dependencies
+### 📦 2. Install Dependencies
 
 # Backend
 cd backend
@@ -217,7 +220,7 @@ cd ../frontend
 npm install
 
 
-🔑 3. Environment Setup
+### 🔑 3. Environment Setup
 
 Create backend/.env:
 
@@ -236,7 +239,7 @@ GOOGLE_CLIENT_ID=YOUR_ID
 GOOGLE_CLIENT_SECRET=YOUR_SECRET
 
 
-🔗 5. Access the App
+### 🔗 5. Access the App
 
 | App                   | URL                                            |
 | --------------------- | ---------------------------------------------- |
