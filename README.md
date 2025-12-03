@@ -197,7 +197,7 @@ backend/
 
 ## 📥 **1. Clone Repository**
 
-git clone [https://github.com/MANANPATEL7310/Stock-Trading-Plateform]
+git clone <https://github.com/MANANPATEL7310/Stock-Trading-Plateform>
 
 cd stock-trading-platform
 
@@ -222,12 +222,17 @@ npm install
 Create backend/.env:
 
 PORT=5000
+
 MONGO_URL=your_mongodb_url
+
 FRONTEND_URL=http://localhost:5173
+
 DASHBOARD_URL=http://localhost:5174
+
 JWT_SECRET=your_secret_here
 
 GOOGLE_CLIENT_ID=YOUR_ID
+
 GOOGLE_CLIENT_SECRET=YOUR_SECRET
 
 
@@ -235,4 +240,4 @@ GOOGLE_CLIENT_SECRET=YOUR_SECRET
 
 | App                   | URL                                            |
 | --------------------- | ---------------------------------------------- |
-| **Landing Page**      | [https://stock-trading-plateform.onrender.com] |
+| **Landing Page**      | <https://stock-trading-plateform.onrender.com> |
