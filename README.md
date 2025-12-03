@@ -1,6 +1,9 @@
 <div align="center">
 
-# 💹 **Stock Trading Platform (Zerodha Clone)**
+<p align="center">
+  <img src="https://svg-banners.vercel.app/api?type=glitch&text1=Stock%20Trading%20Platform&text2=Next-Gen%20Market%20Simulator&width=900&height=200" />
+</p>
+
 A full-featured stock trading simulation platform inspired by Zerodha — including real-time market simulation, trading dashboard, authentication system, portfolio engine, news service, and more.
 
 <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&duration=2300&pause=700&color=36BCF7&center=true&vCenter=true&width=600&lines=Real-time+Stock+Simulation;Buy+%2F+Sell+Trading+Engine;Google+OAuth+%2F+JWT+Auth;Full+Dashboard+with+Charts;Complete+Portfolio+%26+Holdings+System" />
