@@ -176,14 +176,23 @@ Tracks:
 # 📁 **Folder Structure (Backend)**
 
 backend/
+
 │── controllers/
+
 │── models/
+
 │── routes/
+
 │── services/
+
 │── utils/
+
 │── data/
+
 │── app.js
+
 │── .env
+
 │── package.json
 
 
@@ -244,3 +253,11 @@ GOOGLE_CLIENT_SECRET=YOUR_SECRET
 | App                   | URL                                            |
 | --------------------- | ---------------------------------------------- |
 | **Landing Page**      | <https://stock-trading-plateform.onrender.com> |
+| **Trading Dashboard** | <https://stock-trading-plateform-dashboard-erys.onrender.com> |
+
+<div align="center">
+🏁 Thank You for Exploring the Project!
+
+⭐ If you like this project, consider giving the repo a star!
+
+</div> 
